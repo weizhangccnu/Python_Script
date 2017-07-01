@@ -24,31 +24,27 @@ class command_interpret:
     # @para Data write into the configuration register 0-65535, [15:0]
     def write_config_reg(self, Addr, Data):
         data = 0x00200000 + (Addr << 16) + Data
-        stri = struct.pack('I',data)
-        self.ss.sendall(stri[::-1])
+        self.ss.sendall(struct.pack('I',data)[::-1])
     
     ## read config_reg
     # @para Addr Address of the configuration register 0-31 
     # return 32bit data
     def read_config_reg(self, Addr):
         data = 0x80200000 + (Addr << 16) 
-        stri = struct.pack('I', data)
-        self.ss.sendall(stri[::-1])
+        self.ss.sendall(struct.pack('I', data)[::-1])
         return struct.unpack('I', self.ss.recv(4)[::-1])[0]
 
     ## write pulse_reg
     # @para Data write into the pulse register 0-65535
     def write_pulse_reg(self, Data):
         data = 0x000b0000 + Data
-        stri = struct.pack('I',data)
-        self.ss.sendall(stri[::-1])
+        self.ss.sendall(struct.pack('I',data)[::-1])
 
     ## read status_reg
     # @para Addr Address of the configuration register 0-10
     def read_status_reg(self, Addr):
         data = 0x80000000 + (Addr << 16)
-        stri = struct.pack('I',data)
-        self.ss.sendall(stri[::-1])
+        self.ss.sendall(struct.pack('I',data)[::-1])
         return struct.unpack('I', self.ss.recv(4)[::-1])[0]
 
     ## write memeoy
@@ -56,35 +52,26 @@ class command_interpret:
     # @para Data write into memory data 0-65535
     def write_memory(self, Addr, Data):
         data = 0x00110000 + (0x0000ffff & Addr)             #memory address LSB register
-        stri = struct.pack('I',data)
-        self.ss.sendall(stri[::-1])
+        self.ss.sendall(struct.pack('I',data)[::-1])
         data = 0x00120000 + ((0xffff0000 & Addr) >> 16)     #memory address MSB register
-        stri = struct.pack('I',data)
-        self.ss.sendall(stri[::-1])
+        self.ss.sendall(struct.pack('I',data)[::-1])
         data = 0x00130000 + (0x0000ffff & Data)             #memory address LSB register
-        stri = struct.pack('I',data)
-        self.ss.sendall(stri[::-1])
+        self.ss.sendall(struct.pack('I',data)[::-1])
         data = 0x00140000 + ((0xffff0000 & Data) >> 16)     #memory address MSB register
-        stri = struct.pack('I',data)
-        self.ss.sendall(stri[::-1])
+        self.ss.sendall(struct.pack('I',data)[::-1])
 
     ## read memory
     # @para Cnt read data counts 0-65535
     # @para Addr start address of read memory 0-65535
     def read_memory(self, Cnt, Addr): 
         data = 0x00100000 + Cnt                             #write sMemioCnt
-        stri = struct.pack('I',data)
-        self.ss.sendall(stri[::-1])
+        self.ss.sendall(struct.pack('I',data)[::-1])
         data = 0x00110000 + (0x0000ffff & Addr)             #write memory address LSB register
-        stri = struct.pack('I',data)
-        self.ss.sendall(stri[::-1])
+        self.ss.sendall(struct.pack('I',data)[::-1])
         data = 0x00120000 + ((0xffff0000 & Addr) >> 16)     #write memory address MSB register
-        stri = struct.pack('I',data)
-        self.ss.sendall(stri[::-1])
-
+        self.ss.sendall(struct.pack('I',data)[::-1])
         data = 0x80140000                                   #read Cnt 32bit memory words  
-        stri = struct.pack('I',data)
-        self.ss.sendall(stri[::-1])
+        self.ss.sendall(struct.pack('I',data)[::-1])
         for i in xrange(Cnt):
             print hex(struct.unpack('I', self.ss.recv(4)[::-1])[0])
 #======================================================================#
