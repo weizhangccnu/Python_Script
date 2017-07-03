@@ -65,7 +65,7 @@ class command_interpret:
     # @param Addr start address of read memory 0-65535
     def read_memory(self, Cnt, Addr): 
         data = 0x00100000 + Cnt                             #write sMemioCnt
-        self.ss.sendall(struct.pack('I3',data)[::-1])
+        self.ss.sendall(struct.pack('I',data)[::-1])
         data = 0x00110000 + (0x0000ffff & Addr)             #write memory address LSB register
         self.ss.sendall(struct.pack('I',data)[::-1])
         data = 0x00120000 + ((0xffff0000 & Addr) >> 16)     #write memory address MSB register
