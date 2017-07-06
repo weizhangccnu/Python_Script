@@ -78,8 +78,8 @@ class command_interpret:
     ## read_data_fifo
     # @param Cnt read data counts 0-65535
     def read_data_fifo(self, Cnt):
-        data = 0x001a0000 + 0x0000ffff                      #write sDataFifoHigh address = 26
-        self.ss.sendall(struct.pack('I',data)[::-1])
+        #data = 0x001a0000 + 0x0000ffff                      #write sDataFifoHigh address = 26
+        #self.ss.sendall(struct.pack('I',data)[::-1])
         data = 0x00190000 + Cnt                             #write sDataFifoHigh address = 25
         self.ss.sendall(struct.pack('I',data)[::-1])
         for i in xrange(Cnt):
@@ -108,9 +108,9 @@ if __name__ == "__main__":
 
     #for i in xrange(100000):                                     #write pulse_reg
     #    cmd_interpret.write_pulse_reg(0xffff)
-    #    time.sleep(0.003)
+    #    time.sleep(0.03)
 
-    #for i in xrange(11):                                        #write 11*16bit data to config_reg    
+    #for i in xrange(11):                                        #write 11*16bit data to config_reg 
     #    cmd_interpret.write_config_reg(i,0xaaa0+i)
     #    print "write into config_reg: %d"%cmd_interpret.read_config_reg(i)
     #    cmd_interpret.write_pulse_reg(0xffff)
@@ -120,13 +120,20 @@ if __name__ == "__main__":
 
     #for i in xrange(256):
     #    cmd_interpret.write_memory(i,0xaaaaff00+i) 
-    #    #time.sleep(0.01) 
-    #cmd_interpret.read_memory(20, 0x0000001f)
-
-    for i in xrange(510): 
+    #    time.sleep(0.01) 
+    #cmd_interpret.read_memory(20, 0x00000000)
+    
+    cmd_interpret.write_config_reg(2,0x0000)
+    for i in xrange(5):
+        cmd_interpret.write_pulse_reg(0x8000)
+    cmd_interpret.write_config_reg(2,0x0001)
+    for i in xrange(10): 
         cmd_interpret.write_config_reg(0,i)
         cmd_interpret.write_config_reg(1,0xaaaa)
         cmd_interpret.write_pulse_reg(0x8000)
-    cmd_interpret.read_data_fifo(20)
+        for i in xrange(2):
+            print "Read back data: %d"%cmd_interpret.read_config_reg(i) #read config_reg
+    cmd_interpret.read_data_fifo(5)
+    cmd_interpret.read_data_fifo(4)
     s.close()                                                   #close socket
     sys.exit(main())                                            #execute main function 
