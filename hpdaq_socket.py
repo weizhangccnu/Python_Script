@@ -78,8 +78,6 @@ class command_interpret:
     ## read_data_fifo
     # @param Cnt read data counts 0-65535
     def read_data_fifo(self, Cnt):
-        #data = 0x001a0000 + 0x0000ffff                      #write sDataFifoHigh address = 26
-        #self.ss.sendall(struct.pack('I',data)[::-1])
         data = 0x00190000 + Cnt                             #write sDataFifoHigh address = 25
         self.ss.sendall(struct.pack('I',data)[::-1])
         for i in xrange(Cnt):
@@ -123,17 +121,17 @@ if __name__ == "__main__":
     #    time.sleep(0.01) 
     #cmd_interpret.read_memory(20, 0x00000000)
     
-    cmd_interpret.write_config_reg(2,0x0000)
-    for i in xrange(5):
-        cmd_interpret.write_pulse_reg(0x8000)
-    cmd_interpret.write_config_reg(2,0x0001)
-    for i in xrange(10): 
+    cmd_interpret.write_config_reg(2,0x0000)                    #write disable
+    for i in xrange(5):                                         #generate 5 clcok period after reset
+        cmd_interpret.write_pulse_reg(0x8000)                   
+    cmd_interpret.write_config_reg(2,0x0001)                    #write enable
+    for i in xrange(10):                                        #write 10 data to fifo
         cmd_interpret.write_config_reg(0,i)
         cmd_interpret.write_config_reg(1,0xaaaa)
-        cmd_interpret.write_pulse_reg(0x8000)
+        cmd_interpret.write_pulse_reg(0x8000)                   #generate clock to write data
         for i in xrange(2):
             print "Read back data: %d"%cmd_interpret.read_config_reg(i) #read config_reg
-    cmd_interpret.read_data_fifo(5)
+    cmd_interpret.read_data_fifo(5)                             #read data from fifo
     cmd_interpret.read_data_fifo(4)
     s.close()                                                   #close socket
     sys.exit(main())                                            #execute main function 
