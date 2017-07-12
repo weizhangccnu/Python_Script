@@ -84,9 +84,60 @@ class command_interpret:
             print hex(struct.unpack('I', self.ss.recv(4)[::-1])[0])
 
 #======================================================================#
+def test_config_reg():
+    for i in xrange(32):                                       
+        print "Write in data: %d"%i
+        cmd_interpret.write_config_reg(i,i+100)                     #write config_reg
+        print "Read back data: %d"%cmd_interpret.read_config_reg(i) #read config_reg
+        time.sleep(0.1)
+
+#======================================================================#
+def test_pulse_reg():
+    for i in xrange(100000):                                     #write pulse_reg
+        cmd_interpret.write_pulse_reg(0xffff)
+        time.sleep(0.03)
+
+#======================================================================#
+def test_status_reg():
+    for i in xrange(11):                                        #write 11*16bit data to config_reg 
+        cmd_interpret.write_pulse_reg(0x0001)
+        cmd_interpret.write_config_reg(i,0xaaa0+i)
+        print "write into config_reg: %d"%cmd_interpret.read_config_reg(i)
+        time.sleep(0.001)
+    for i in xrange(11):                                        #read 11*16bit data from status_reg
+        print "read from status_reg: %d"%cmd_interpret.read_status_reg(i)
+#======================================================================#
+def test_memory():
+    for i in xrange(256):
+        cmd_interpret.write_memory(i,0xaaaaff00+i) 
+        time.sleep(0.01) 
+    cmd_interpret.read_memory(20, 0x00000000)
+
+#======================================================================#
+def test_data_fifo():
+    cmd_interpret.write_config_reg(2,0x0000)                    #write disable
+    for i in xrange(5):                                         #generate 5 clcok period after reset
+        cmd_interpret.write_pulse_reg(0x8000)                   
+    cmd_interpret.write_config_reg(2,0x0001)                    #write enable
+    for i in xrange(10):                                        #write 10 data to fifo
+        cmd_interpret.write_config_reg(0,i)
+        cmd_interpret.write_config_reg(1,0xaaaa)
+        cmd_interpret.write_pulse_reg(0x8000)                   #generate clock to write data
+        time.sleep(0.01)
+        for i in xrange(2):
+            print "Read back data: %d"%cmd_interpret.read_config_reg(i) #read config_reg
+    cmd_interpret.read_data_fifo(5)                             #read data from fifo
+    cmd_interpret.read_data_fifo(4)
+
+#======================================================================#
 ## main function
 #
 def main():
+    #test_config_reg()  
+    #test_pulse_reg()  
+    #test_status_reg()
+    #test_memory()
+    test_data_fifo()
     print "OK!"
 #======================================================================#
 if __name__ == "__main__":
@@ -98,40 +149,5 @@ if __name__ == "__main__":
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)       #establish socket
     s.connect((hostname, port))                                 #connet socket
     cmd_interpret = command_interpret(s)
-    #for i in xrange(32):                                       
-    #    print "Write in data: %d"%i
-    #    cmd_interpret.write_config_reg(i,i+100)                 #write config_reg
-    #    print "Read back data: %d"%cmd_interpret.read_config_reg(i) #read config_reg
-    #    time.sleep(0.1)
-
-    #for i in xrange(100000):                                     #write pulse_reg
-    #    cmd_interpret.write_pulse_reg(0xffff)
-    #    time.sleep(0.03)
-
-    #for i in xrange(11):                                        #write 11*16bit data to config_reg 
-    #    cmd_interpret.write_config_reg(i,0xaaa0+i)
-    #    print "write into config_reg: %d"%cmd_interpret.read_config_reg(i)
-    #    cmd_interpret.write_pulse_reg(0xffff)
-    #    time.sleep(0.001)
-    #for i in xrange(11):                                        #read 11*16bit data from status_reg
-    #    print "read from status_reg: %d"%cmd_interpret.read_status_reg(i)   
-
-    #for i in xrange(256):
-    #    cmd_interpret.write_memory(i,0xaaaaff00+i) 
-    #    time.sleep(0.01) 
-    #cmd_interpret.read_memory(20, 0x00000000)
-    
-    cmd_interpret.write_config_reg(2,0x0000)                    #write disable
-    for i in xrange(5):                                         #generate 5 clcok period after reset
-        cmd_interpret.write_pulse_reg(0x8000)                   
-    cmd_interpret.write_config_reg(2,0x0001)                    #write enable
-    for i in xrange(10):                                        #write 10 data to fifo
-        cmd_interpret.write_config_reg(0,i)
-        cmd_interpret.write_config_reg(1,0xaaaa)
-        cmd_interpret.write_pulse_reg(0x8000)                   #generate clock to write data
-        for i in xrange(2):
-            print "Read back data: %d"%cmd_interpret.read_config_reg(i) #read config_reg
-    cmd_interpret.read_data_fifo(5)                             #read data from fifo
-    cmd_interpret.read_data_fifo(4)
-    s.close()                                                   #close socket
     sys.exit(main())                                            #execute main function 
+    s.close()                                                   #close socket
