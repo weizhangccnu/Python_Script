@@ -137,7 +137,7 @@ def main():
     #test_pulse_reg()  
     #test_status_reg()
     #test_memory()
-    test_data_fifo()
+    #test_data_fifo()
     print "OK!"
 #======================================================================#
 if __name__ == "__main__":
