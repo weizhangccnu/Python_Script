@@ -130,6 +130,8 @@ def test_data_fifo():
     cmd_interpret.read_data_fifo(5)                             #read data from fifo
 
 #======================================================================#
+## write 32bit data to dac8568
+# @param dat write into dac8568's data
 def dac8568_write_data(dat):
     cmd_interpret.write_config_reg(0,(0xffff0000&dat)>>16)  #write high word to fifo
     cmd_interpret.write_pulse_reg(0x0002)                   #generate write pulse  
@@ -138,32 +140,21 @@ def dac8568_write_data(dat):
 #======================================================================#
 ## test dac8568 via hpdaq FPGA development board
 # @param ch choose the dac8568 channel 0-15
-# @param data dac8568 write in digital data 0-65535
-def test_dac8568(ch, data):
-    print ch
+# @param data dac8568 write in digital data 0-5V
+def test_dac8568(ch, val):
+    data = int((val*65535.0)/5.0)
     if ch >= 0 and ch <=7:
         cmd_interpret.write_config_reg(1,0x0001)                #select dac8568 one
-        dat = 0x58000001                                        #enable internal reference 
-        dac8568_write_data(dat)
-
-        dat = 0x5000000a + (ch << 20)+ (data << 4)              #write to selected channel input register 
-        dac8568_write_data(dat)
-        
-        dat = 0x5100000a + (ch << 20) + (data << 4)             #update selected channel register 
-        dac8568_write_data(dat)
-
     elif ch >7 and ch <= 15:
         cmd_interpret.write_config_reg(1,0x0000)                #select dac8568 two 
-        dat = 0x58000001                                        #enable internal reference 
-        dac8568_write_data(dat)
-
-        dat = 0x5000000a + (ch << 20)+ (data << 4)              #write to selected channel input register 
-        dac8568_write_data(dat)
-        
-        dat = 0x5100000a + (ch << 20) + (data << 4)             #update selected channel register 
-        dac8568_write_data(dat)
     else:
         print "you input error channel unmber"
+    dat = 0x58000001                                        #enable internal reference 
+    dac8568_write_data(dat)
+    dat = 0x5000000a + (ch << 20)+ (data << 4)              #write to selected channel input register 
+    dac8568_write_data(dat)
+    dat = 0x5100000a + (ch << 20) + (data << 4)             #update selected channel register 
+    dac8568_write_data(dat)
     
 #======================================================================#
 ## main function
@@ -174,7 +165,12 @@ def main():
     #test_status_reg()
     #test_memory()
     #test_data_fifo()
-    test_dac8568(int(sys.argv[1]), int(sys.argv[2]))
+    for i in xrange(10):
+        print i
+        for ch in xrange(16):
+            test_dac8568(ch, i*0.33)
+            time.sleep(0.1) 
+        time.sleep(5) 
     print "OK!"
 #======================================================================#
 if __name__ == "__main__":
@@ -186,6 +182,6 @@ if __name__ == "__main__":
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)       #establish socket
     s.connect((hostname, port))                                 #connet socket
     cmd_interpret = command_interpret(s)
-    main()                                            		#execute main function 
+    sys.exit(main())                                     		#execute main function 
     s.close()                                                   #close socket
 				
