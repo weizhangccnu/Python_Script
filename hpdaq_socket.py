@@ -165,12 +165,13 @@ def shift_register_wr(data, clk_div):
     div_reg = (clk_div & 0x3f) << 170                       #config_reg[175:170]
     data_reg = data & ((1 << 170)-1)                        #config_reg[169:0]
     val = div_reg | data_reg
+    print bin(val)
     for i in xrange(11):                                    #write 176bit to config register
         cmd_interpret.write_config_reg(i,(val >> i*16) & 0xffff)
     cmd_interpret.write_pulse_reg(0x0001)                   #pulse_reg[0] generate a pulse
-    print bin(val)
     for i in xrange(11): 
-        pass
+        print bin(cmd_interpret.read_status_reg(i))
+
 #======================================================================#
 ## main function
 #
@@ -188,7 +189,7 @@ def main():
     #        time.sleep(0.1) 
     #    time.sleep(5) 
     ## test shift register 
-    data_in = 123456
+    data_in = 12345678987
     clk_div = 7    
     shift_register_wr(data_in, clk_div)
     print "OK!"
