@@ -137,6 +137,7 @@ def dac8568_write_data(dat):
     cmd_interpret.write_pulse_reg(0x0002)                   #generate write pulse  
     cmd_interpret.write_config_reg(0,0xffff&dat)            #write low word to fifo
     cmd_interpret.write_pulse_reg(0x0002)                   #generate write pulse
+
 #======================================================================#
 ## test dac8568 via hpdaq FPGA development board
 # @param ch choose the dac8568 channel 0-15
@@ -144,9 +145,9 @@ def dac8568_write_data(dat):
 def test_dac8568(ch, val):
     data = int((val*65535.0)/5.0)
     if ch >= 0 and ch <=7:
-        cmd_interpret.write_config_reg(1,0x0001)                #select dac8568 one
+        cmd_interpret.write_config_reg(1,0x0001)            #select dac8568 one
     elif ch >7 and ch <= 15:
-        cmd_interpret.write_config_reg(1,0x0000)                #select dac8568 two 
+        cmd_interpret.write_config_reg(1,0x0000)            #select dac8568 two 
     else:
         print "you input error channel unmber"
     dat = 0x58000001                                        #enable internal reference 
@@ -157,6 +158,20 @@ def test_dac8568(ch, val):
     dac8568_write_data(dat)
     
 #======================================================================#
+## shift register write and read function
+# @param[in] data 170bit value to be sent to the TMIIa shift register
+# @param[in] clk_div clock frequency division factor:(clk/2**clk_div) [5:0]
+def shift_register_wr(data, clk_div):
+    div_reg = (clk_div & 0x3f) << 170                       #config_reg[175:170]
+    data_reg = data & ((1 << 170)-1)                        #config_reg[169:0]
+    val = div_reg | data_reg
+    for i in xrange(11):                                    #write 176bit to config register
+        cmd_interpret.write_config_reg(i,(val >> i*16) & 0xffff)
+    cmd_interpret.write_pulse_reg(0x0001)                   #pulse_reg[0] generate a pulse
+    print bin(val)
+    for i in xrange(11): 
+        pass
+#======================================================================#
 ## main function
 #
 def main():
@@ -165,12 +180,17 @@ def main():
     #test_status_reg()
     #test_memory()
     #test_data_fifo()
-    for i in xrange(10):
-        print i
-        for ch in xrange(16):
-            test_dac8568(ch, i*0.33)
-            time.sleep(0.1) 
-        time.sleep(5) 
+    ## test dac8568 
+    #for i in xrange(10):
+    #    print i
+    #    for ch in xrange(16):
+    #        test_dac8568(ch, i*0.33)
+    #        time.sleep(0.1) 
+    #    time.sleep(5) 
+    ## test shift register 
+    data_in = 123456
+    clk_div = 7    
+    shift_register_wr(data_in, clk_div)
     print "OK!"
 #======================================================================#
 if __name__ == "__main__":
@@ -181,7 +201,7 @@ if __name__ == "__main__":
     # @param AF_INET6:base on IPV6 network TCP/UDP socket
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)       #establish socket
     s.connect((hostname, port))                                 #connet socket
-    cmd_interpret = command_interpret(s)
-    sys.exit(main())                                     		#execute main function 
+    cmd_interpret = command_interpret(s)                        #define a class
+    main()                                                      #execute main function
     s.close()                                                   #close socket
 				
