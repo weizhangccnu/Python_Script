@@ -217,24 +217,25 @@ def main():
     for i in xrange(len(dac_val)):
         print i, dac_val[i]
         test_dac8568(i, dac_val[i])                          
-        time.sleep(0.1)
+        time.sleep(0.01)
+    
     ## config shift register 
-    dac1 = 0xffff
-    dac2 = 0xffff
-    dac3 = 0xffff
-    dac4 = 0xffff
-    dac5 = 0xffff
-    dac6 = 0xffff
-    dac7 = 0xffff
-    dac8 = 0xffff
-    dac9 = 0xffff
+    dac1 = 0x0000
+    dac2 = 0x0000
+    dac3 = 0x0000
+    dac4 = 0x0000
+    dac5 = 0x0000
+    dac6 = 0x0000
+    dac7 = 0x0000
+    dac8 = 0x0000
+    dac9 = 0x0000
     VBTail_RCF = 0b0010
     VREF_RCF = 0b0010
     VBP_RCF = 0b0010
     SF_IBP = 0b0010
     D_BUFFER_EN = 0b1
     A_BUFFER_EN = 0b1
-    CMOSSW_Bias = 0b1
+    CMOSSW_Bias = 0b0                       #CMOS switch 0:off   1:on
     COL_IB_RCF = 0b0010
     NC = 0b000
 
@@ -243,20 +244,23 @@ def main():
     time.sleep(1)
     clk_div = 7    
     shift_register_wr(data_in, clk_div)
-    ## config analog scan module
-    start_addr = 0
-    data_to_sram = [0x8 for i in xrange(9720)]
-    tm_sram_config(start_addr, data_to_sram)            #config sram
-    time.sleep(3)
-    
+
+    ## array scan control 
     clk_div = 6                                         #array scan clock
     wr_clk_div = 5                                      #sram write and read clock
-    stop_addr = 1                                       #0x8013  pixel(0,19)
+    stop_addr = 0x8013                                 #0x8013  pixel(0,19)
+    #stop_addr = 1                                       #0x8013  pixel(0,19)
     trig_rate = 4
     trig_delay = 1
     stop_clk_s = 0                                      #0: keep clk running 1: clk stop
     keep_we = 1
     tm_array_scan(clk_div, wr_clk_div, stop_addr, trig_rate, trig_delay, stop_clk_s, keep_we)
+
+    ## config analog scan module
+    start_addr = 0
+    data_to_sram = [0x8 for i in xrange(9720)]
+    tm_sram_config(start_addr, data_to_sram)            #config sram
+    time.sleep(3)
     print "OK!"
 #======================================================================#
 if __name__ == "__main__":
