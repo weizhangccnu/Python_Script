@@ -219,7 +219,28 @@ def main():
         test_dac8568(i, dac_val[i])                          
         time.sleep(0.1)
     ## config shift register 
-    data_in = 123456789087
+    dac1 = 0xffff
+    dac2 = 0xffff
+    dac3 = 0xffff
+    dac4 = 0xffff
+    dac5 = 0xffff
+    dac6 = 0xffff
+    dac7 = 0xffff
+    dac8 = 0xffff
+    dac9 = 0xffff
+    VBTail_RCF = 0b0010
+    VREF_RCF = 0b0010
+    VBP_RCF = 0b0010
+    SF_IBP = 0b0010
+    D_BUFFER_EN = 0b1
+    A_BUFFER_EN = 0b1
+    CMOSSW_Bias = 0b1
+    COL_IB_RCF = 0b0010
+    NC = 0b000
+
+    data_in = (dac9<<151)+(COL_IB_RCF<<147)+(CMOSSW_Bias<<146)+(A_BUFFER_EN<<145)+(D_BUFFER_EN<<144)+(dac1<<128)+(dac3<<112)+(dac2<<96)+(dac8<<80)+(SF_IBP<<76)+(dac5<<60)+(VBP_RCF<<56)+(dac4<<40)+(VREF_RCF<<36)+(dac6<<20)+(VBTail_RCF<<16)+(dac7<<0) 
+    print bin(data_in)
+    time.sleep(1)
     clk_div = 7    
     shift_register_wr(data_in, clk_div)
     ## config analog scan module
@@ -228,9 +249,9 @@ def main():
     tm_sram_config(start_addr, data_to_sram)            #config sram
     time.sleep(3)
     
-    clk_div = 5
-    wr_clk_div = 5
-    stop_addr = 0x8013                                  #0x8013  pixel(0,19)
+    clk_div = 6                                         #array scan clock
+    wr_clk_div = 5                                      #sram write and read clock
+    stop_addr = 1                                       #0x8013  pixel(0,19)
     trig_rate = 4
     trig_delay = 1
     stop_clk_s = 0                                      #0: keep clk running 1: clk stop
