@@ -191,7 +191,7 @@ def tm_sram_config(start_addr, data_to_sram):
 
 #======================================================================#
 ## topmetal array scan config function
-# @param[in] clk_div clock frequency division factor when array is scanning
+# @param[in] clk_diclock frequency division factor when array is scanning
 # @param[in] wr_clk_div clock frequency division factor when writing data into pixel
 # @param[in] stop_addr controls where scanning stop
 def tm_array_scan(clk_div, wr_clk_div, stop_addr, trig_rate, trig_delay, stop_clk_s, keep_we):
@@ -203,24 +203,24 @@ def tm_array_scan(clk_div, wr_clk_div, stop_addr, trig_rate, trig_delay, stop_cl
 ## main function
 #
 def main():
+    vref = float(sys.argv[1])
     ## config dac8568 
     VBTAIL_RCF_IN = 0.74                                #dac8568 channel 0 ----> VBTAIL_RCF_IN default value 0.74V
-    VREF_RCF_IN = 0.1                                   #dac8568 channel 1 ----> VREF_RCF_IN default value 0.1V
-    VBP_RCF_IN = 2.2                                    #dac8568 channel 2 ----> VBP_RCF_IN default value 2.2V
-    SF1_IBP_RCF_IN = 1.6                                #dac8568 channel 3 ----> SF1_IBP_RCF_IN default value 1.6V
+    VREF_RCF_IN = 0.12                                	#dac8568 channel 1 ----> VREF_RCF_IN default value 0.1V
+    VBP_RCF_IN = 2.2                                   #dac8568 channel 2 ----> VBP_RCF_IN default value 2.2V
+    SF1_IBP_RCF_IN = 1.6                              #dac8568 channel 3 ----> SF1_IBP_RCF_IN default value 1.6V
     CSA_VBN = 0.77                                      #dac8568 channel 4 ----> CSA_VBN default value 0.77V
     CSA_VRSTL_VG = 3.3                                  #dac8568 channel 5 ----> CSA_VRSTL_VG default value 3.3V
-    CSA_VRSTL = 0.23                                    #dac8568 channel 6 ----> CSA_VRSTL default value 0.23V
-    CSA_VRSTH = 0.3                                     #dac8568 channel 7 ----> CSA_VRSTH default value 0.3V
+    CSA_VRSTL = vref                                    #dac8568 channel 6 ----> CSA_VRSTL default value 0.23V
+    CSA_VRSTH = vref                                    #dac8568 channel 7 ----> CSA_VRSTH default value 0.23V
     COL_IB_ICF_IN = 0.4                                 #dac8568 channel 12 ----> COL_IB_ICF_IN default value 0.4V, the rest of channel's output value are 0V
     dac_val = [VBTAIL_RCF_IN, VREF_RCF_IN, VBP_RCF_IN, SF1_IBP_RCF_IN, CSA_VBN, CSA_VRSTL_VG, CSA_VRSTL, CSA_VRSTH, 0, 0, 0, 0, COL_IB_ICF_IN, 0, 0, 0]
     for i in xrange(len(dac_val)):
         print i, dac_val[i]
         test_dac8568(i, dac_val[i])                          
-        time.sleep(0.01)
-    
+        time.sleep(0.1)
     ## config shift register 
-    dac1 = 0x0000
+    dac1 = 0x0000                                   # 0x0000: output 0V  0xffff: output 3.3V
     dac2 = 0x0000
     dac3 = 0x0000
     dac4 = 0x0000
@@ -229,13 +229,13 @@ def main():
     dac7 = 0x0000
     dac8 = 0x0000
     dac9 = 0x0000
-    VBTail_RCF = 0b0010
+    VBTail_RCF = 0b0001
     VREF_RCF = 0b0010
-    VBP_RCF = 0b0010
+    VBP_RCF = 0b1000
     SF_IBP = 0b0010
-    D_BUFFER_EN = 0b1
+    D_BUFFER_EN = 0b0                               # D Buffer enable 0: on    1:off
     A_BUFFER_EN = 0b1
-    CMOSSW_Bias = 0b0                       #CMOS switch 0:off   1:on
+    CMOSSW_Bias = 0b0                               #CMOS switch  0:off    1:on
     COL_IB_RCF = 0b0010
     NC = 0b000
 
@@ -244,23 +244,21 @@ def main():
     time.sleep(1)
     clk_div = 7    
     shift_register_wr(data_in, clk_div)
-
-    ## array scan control 
-    clk_div = 6                                         #array scan clock
-    wr_clk_div = 5                                      #sram write and read clock
-    stop_addr = 0x8013                                 #0x8013  pixel(0,19)
-    #stop_addr = 1                                       #0x8013  pixel(0,19)
-    trig_rate = 4
-    trig_delay = 1
-    stop_clk_s = 0                                      #0: keep clk running 1: clk stop
-    keep_we = 1
-    tm_array_scan(clk_div, wr_clk_div, stop_addr, trig_rate, trig_delay, stop_clk_s, keep_we)
-
     ## config analog scan module
     start_addr = 0
     data_to_sram = [0x8 for i in xrange(9720)]
     tm_sram_config(start_addr, data_to_sram)            #config sram
     time.sleep(3)
+    
+    clk_div = 6                                         #array scan clock
+    wr_clk_div = 5                                      #sram write and read clock
+    #stop_addr = 0x8005                                       #0x8013  pixel(0,19)
+    stop_addr = 1                                       #0x8013  pixel(0,19)
+    trig_rate = 4
+    trig_delay = 1
+    stop_clk_s = 0                                      #0: keep clk running 1: clk stop
+    keep_we = 1
+    tm_array_scan(clk_div, wr_clk_div, stop_addr, trig_rate, trig_delay, stop_clk_s, keep_we)
     print "OK!"
 #======================================================================#
 if __name__ == "__main__":
