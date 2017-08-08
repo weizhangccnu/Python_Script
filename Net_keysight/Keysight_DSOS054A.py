@@ -33,21 +33,32 @@ def main():
         ss.send(":WAVeform:FORMat WORD;")           #Query analog store depth
         ss.send(":WAVeform:STReaming 1;")           #Query analog store depth
         #ss.send(":WAVeform:DATA? 1,%d;"%(Sample_Rate * 10 * Timebase_scale))                 #Query analog store depth
+        print total_point
         ss.send(":WAVeform:DATA? 1,%d;"%int(total_point))         #Query analog store depth
-        string = ""
-        for i in xrange((int(total_point)/1446)+1): 
-            string += ss.recv(1280000000)
-        print string
-        length = len(string[3:])
-        print length
-        #for i in xrange(length/2):
-        #    print i,(ord(string[3+i*2+1])<<8) + ord(string[3+i*2])
-        #    outfile.write("%d %d\n"%(i, (ord(string[3+i*2+1])<<8) + ord(string[3+i*2])))
+        n = total_point * 2 + 3
+        print "n = %d"%n
+        totalContent = ""
+        totalRecved = 0
+        while totalRecved < n:
+            print n, n-totalRecved
+            onceContent = ss.recv(int(n - totalRecved))
+            print len(onceContent)
+            totalContent += onceContent
+            totalRecved = len(totalContent)
+        print len(totalContent)
+        length = len(totalContent[3:]) #print length
+        print length/2
+        for i in xrange(length/2):
+            if (ord(totalContent[3+i*2+1])<<8) + ord(totalContent[3+i*2]) > 32768:
+                outfile.write("%d %d\n"%(i, (ord(totalContent[3+i*2+1])<<8)+ord(totalContent[3+i*2]) - 65535))
+            else:
+                outfile.write("%d %d\n"%(i, (ord(totalContent[3+i*2+1])<<8)+ord(totalContent[3+i*2])))
 #========================================================#
 ## if statement
 #
 if __name__ == '__main__':
     ss = socket.socket(socket.AF_INET,socket.SOCK_STREAM)       #init local socket handle
     ss.connect((hostname,port))                                 #connect to the server
+    
     main()
     ss.close()
