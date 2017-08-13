@@ -4,7 +4,9 @@ import os
 import sys
 import h5py
 import time
-## test h5py function
+"""@package h5py
+This python file is used to test h5py package
+"""
 # @author WeiZhang
 #================================================================#
 def main():
