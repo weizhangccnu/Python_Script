@@ -4,7 +4,7 @@ import os
 import sys
 import h5py
 import time
-
+## test h5py function
 #================================================================#
 def main():
     print "OK"
