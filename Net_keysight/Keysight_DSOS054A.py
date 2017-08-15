@@ -4,9 +4,18 @@ import os
 import sys
 import time
 import socket
+import subprocess
 hostname = "192.168.2.3"                #hostname
 port = 5025                             #host tcp port
 #note that: every command should be termianated with a semicolon
+#========================================================#
+## plto function using gnuplot
+#
+def plot():
+   subprocess.call("gnuplot keysight_oscilloscope.gp", shell = True)
+   subprocess.call("eps2png -resolution 300 keysight_oscilloscope.eps", shell = True)
+   subprocess.call("xdg-open keysight_oscilloscope.png", shell = True)
+   print "OK"
 #========================================================#
 ## main function
 #
@@ -15,9 +24,14 @@ def main():
         Timebase_scale = 0
         ss.send("*IDN?;")                           #read back device ID
         print ss.recv(128)   
-        ss.send(":TIMebase:SCALe?;")                #Time base scale
-        Timebase_scale = float(ss.recv(128)[1:])   
+
+        ss.send(":WAVeform:XRANge?;")               #Query X-axis range 
+        Timebase_scale = float(ss.recv(128)[1:])
         print Timebase_scale
+
+        ss.send(":WAVeform:YRANge?;")               #Query Y-axis range
+        print float(ss.recv(128)[1:])   
+        #time.sleep(10)
 
         ss.send(":ACQuire:POINts:ANALog?;")         #Query analog store depth
         print int(ss.recv(128)[1:])   
@@ -25,10 +39,10 @@ def main():
         ss.send(":ACQuire:SRATe:ANALog?;")          #Query sample rate
         Sample_Rate = float(ss.recv(128)[1:])   
         print Sample_Rate
-        total_point = Sample_Rate * 10 * Timebase_scale
+        total_point = Sample_Rate * Timebase_scale
          
         ss.send(":SYSTem:HEADer OFF;")              #Query analog store depth
-        ss.send(":WAVeform:SOURce CHANnel1;")       #Query analog store depth
+        ss.send(":WAVeform:SOURce CHANnel1;")       #
         ss.send(":WAVeform:BYTeorder LSBFirst;")    #Query analog store depth
         ss.send(":WAVeform:FORMat WORD;")           #Query analog store depth
         ss.send(":WAVeform:STReaming 1;")           #Query analog store depth
@@ -59,6 +73,6 @@ def main():
 if __name__ == '__main__':
     ss = socket.socket(socket.AF_INET,socket.SOCK_STREAM)       #init local socket handle
     ss.connect((hostname,port))                                 #connect to the server
-    
     main()
+    plot()
     ss.close()
