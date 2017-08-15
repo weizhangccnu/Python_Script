@@ -5,6 +5,7 @@ import sys
 import time
 import socket
 import subprocess
+import numpy as np
 hostname = "192.168.2.3"                #hostname
 port = 5025                             #host tcp port
 #note that: every command should be termianated with a semicolon
@@ -28,13 +29,20 @@ def main():
         ss.send(":WAVeform:XRANge?;")               #Query X-axis range 
         Timebase_scale = float(ss.recv(128)[1:])
         print Timebase_scale
+        
 
         ss.send(":WAVeform:YRANge?;")               #Query Y-axis range
         print float(ss.recv(128)[1:])   
         #time.sleep(10)
 
         ss.send(":ACQuire:POINts:ANALog?;")         #Query analog store depth
-        print int(ss.recv(128)[1:])   
+        Sample_point = int(ss.recv(128)[1:]) - 3   
+        print Sample_point
+        print (-Timebase_scale*1000)/2.0
+        print (Timebase_scale*1000)/2.0
+        Xrange = np.arange((-Timebase_scale*1000)/2.0,(Timebase_scale*1000)/2.0,Timebase_scale*1000.0/Sample_point)
+        print Xrange
+        #time.sleep(10)
 
         ss.send(":ACQuire:SRATe:ANALog?;")          #Query sample rate
         Sample_Rate = float(ss.recv(128)[1:])   
@@ -64,9 +72,9 @@ def main():
         print length/2
         for i in xrange(length/2):
             if (ord(totalContent[3+i*2+1])<<8) + ord(totalContent[3+i*2]) > 32768:
-                outfile.write("%d %d\n"%(i, (ord(totalContent[3+i*2+1])<<8)+ord(totalContent[3+i*2]) - 65535))
+                outfile.write("%f %d\n"%(Xrange[i], (ord(totalContent[3+i*2+1])<<8)+ord(totalContent[3+i*2]) - 65535))
             else:
-                outfile.write("%d %d\n"%(i, (ord(totalContent[3+i*2+1])<<8)+ord(totalContent[3+i*2])))
+                outfile.write("%f %d\n"%(Xrange[i], (ord(totalContent[3+i*2+1])<<8)+ord(totalContent[3+i*2])))
 #========================================================#
 ## if statement
 #
