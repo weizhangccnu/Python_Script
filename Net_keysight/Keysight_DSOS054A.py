@@ -24,24 +24,35 @@ def main():
     with open("./data_output.dat",'w') as outfile:
         Timebase_scale = 0
         ss.send("*IDN?;")                           #read back device ID
-        print ss.recv(128)   
+        print "Instrument ID: %s"%ss.recv(128)   
 
         ss.send(":WAVeform:XRANge?;")               #Query X-axis range 
         Timebase_scale = float(ss.recv(128)[1:])
-        print Timebase_scale
+        print "XRange:%f"%Timebase_scale
         
 
         ss.send(":WAVeform:YRANge?;")               #Query Y-axis range
-        print float(ss.recv(128)[1:])   
+        Y_Range = float(ss.recv(128)[1:])   
+        print Y_Range
+        Y_Factor = Y_Range/980.0
         #time.sleep(10)
 
         ss.send(":ACQuire:POINts:ANALog?;")         #Query analog store depth
         Sample_point = int(ss.recv(128)[1:]) - 3   
         print Sample_point
-        print (-Timebase_scale*1000)/2.0
-        print (Timebase_scale*1000)/2.0
+        
+        ss.send(":WAVeform:XUNits?;")               #Query X-axis unit 
+        print (ss.recv(128)[1:])   
+
+        ss.send(":WAVeform:YUNits?;")               #Query Y-axis unit 
+        print (ss.recv(128)[1:])   
+
+        ss.send(":CHANnel1:OFFset?;")               #Channel1 Offset 
+        CH1_Offset = float(ss.recv(128)[1:])   
+        print CH1_Offset
+
         Xrange = np.arange((-Timebase_scale*1000)/2.0,(Timebase_scale*1000)/2.0,Timebase_scale*1000.0/Sample_point)
-        print Xrange
+        #print Xrange
         #time.sleep(10)
 
         ss.send(":ACQuire:SRATe:ANALog?;")          #Query sample rate
@@ -62,19 +73,19 @@ def main():
         totalContent = ""
         totalRecved = 0
         while totalRecved < n:
-            print n, n-totalRecved
+            #print n, n-totalRecved
             onceContent = ss.recv(int(n - totalRecved))
-            print len(onceContent)
+            #print len(onceContent)
             totalContent += onceContent
             totalRecved = len(totalContent)
         print len(totalContent)
         length = len(totalContent[3:]) #print length
         print length/2
         for i in xrange(length/2):
-            if (ord(totalContent[3+i*2+1])<<8) + ord(totalContent[3+i*2]) > 32768:
-                outfile.write("%f %d\n"%(Xrange[i], (ord(totalContent[3+i*2+1])<<8)+ord(totalContent[3+i*2]) - 65535))
+            if (ord(totalContent[3+i*2+1]) & 0x80) == 0x80:             
+                outfile.write("%f %f\n"%(Xrange[i], ((((ord(totalContent[3+i*2+1])<<8)+ord(totalContent[3+i*2]))>>6)-1007)*Y_Factor-CH1_Offset))
             else:
-                outfile.write("%f %d\n"%(Xrange[i], (ord(totalContent[3+i*2+1])<<8)+ord(totalContent[3+i*2])))
+                outfile.write("%f %f\n"%(Xrange[i], (((((ord(totalContent[3+i*2+1])<<8)+ord(totalContent[3+i*2]))>>6)+16)*Y_Factor-CH1_Offset)))
 #========================================================#
 ## if statement
 #
