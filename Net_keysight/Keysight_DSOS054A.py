@@ -14,12 +14,13 @@ port = 5025                             #host tcp port
 # @param x_range x-axis range scope
 # @param y_range y2-axis range scope
 # @param ch1_offset channel one offset 
-def plot(x_range,y_range,ch1_offset):
-   XRange = "x_var='%.2f'"%(x_range)            #xrange parameter 
-   YRange = "y_var='%.2f'"%(y_range)            #yrange parameter
-   CH1offset = "offset='%.2f'"%(ch1_offset)     #offset parameter
-   print XRange,YRange,CH1offset
-   subprocess.call("gnuplot -e %s -e %s -e %s keysight_oscilloscope.gp"%(XRange,YRange,CH1offset), shell = True)
+def plot(x_range,y_range,ch1_offset,timebase_position):
+   XRange = "x_var='%.5f'"%(x_range)            #xrange parameter 
+   YRange = "y_var='%.3f'"%(y_range)            #yrange parameter
+   CH1offset = "offset='%.3f'"%(ch1_offset)     #offset parameter
+   Timebase_Position = "timebase_position='%.5f'"%(timebase_position)     #offset parameter
+   print XRange,YRange,CH1offset,Timebase_Position
+   subprocess.call("gnuplot -e %s -e %s -e %s -e %s keysight_oscilloscope.gp"%(XRange,YRange,CH1offset,Timebase_Position), shell = True)
    subprocess.call("eps2png -resolution 400 keysight_oscilloscope.eps", shell = True)
    subprocess.call("xdg-open keysight_oscilloscope.png", shell = True)
    print "OK"
@@ -31,6 +32,10 @@ def main():
         Timebase_scale = 0
         ss.send("*IDN?;")                           #read back device ID
         print "Instrument ID: %s"%ss.recv(128)   
+
+        ss.send(":TIMebase:POSition?;")               #Query X-axis range 
+        Timebase_Poistion = float(ss.recv(128)[1:])*1000
+        print "Timebase_Position:%.6f"%Timebase_Poistion
 
         ss.send(":WAVeform:XRANge?;")               #Query X-axis range 
         X_Range = float(ss.recv(128)[1:])
@@ -55,10 +60,8 @@ def main():
         ss.send(":CHANnel1:OFFset?;")               #Channel1 Offset 
         CH1_Offset = float(ss.recv(128)[1:])   
         print "Channel 1 Offset:%f"%CH1_Offset
-        if X_Range >= 0.001: 
-            Xrange = np.arange((-X_Range*1000)/2.0,(X_Range*1000)/2.0,X_Range*1000.0/Sample_point)
-        else:
-            Xrange = np.arange((-X_Range)/2.0,(X_Range)/2.0,X_Range*1.0/Sample_point)
+
+        Xrange = np.arange((-X_Range*1000)/2.0,(X_Range*1000)/2.0,X_Range*1000.0/Sample_point)
         #print Xrange
         #time.sleep(10)
 
@@ -87,13 +90,13 @@ def main():
         print len(totalContent)
         length = len(totalContent[3:]) #print length
         print length/2
-        for i in xrange(length/2):                  #store data into file
+        for i in xrange(length/2 - 1):                  #store data into file
             digital_number = ((ord(totalContent[3+i*2+1])<<8)+ord(totalContent[3+i*2]))>>6
             if (ord(totalContent[3+i*2+1]) & 0x80) == 0x80:             
-                outfile.write("%f %f\n"%(Xrange[i], ((digital_number-1007)*Y_Factor + CH1_Offset)))
+                outfile.write("%f %f\n"%(Xrange[i] + Timebase_Poistion, ((digital_number-1007)*Y_Factor + CH1_Offset)))
             else:
-                outfile.write("%f %f\n"%(Xrange[i], ((digital_number+16)*Y_Factor + CH1_Offset)))
-    return [X_Range,Y_Range,CH1_Offset]             #return gnuplot parameters
+                outfile.write("%f %f\n"%(Xrange[i] + Timebase_Poistion, ((digital_number+16)*Y_Factor + CH1_Offset)))
+    return [X_Range,Y_Range,CH1_Offset,Timebase_Poistion]             #return gnuplot parameters
 #========================================================#
 ## if statement
 #
@@ -103,5 +106,5 @@ if __name__ == '__main__':
     xyrange = []
     xyrange = main()
     print xyrange 
-    plot(xyrange[0]*500,xyrange[1]*0.5,xyrange[2])              #plot waveform using fetched data
+    plot(xyrange[0]*500,xyrange[1]*0.5,xyrange[2],xyrange[3])              #plot waveform using fetched data
     ss.close()
