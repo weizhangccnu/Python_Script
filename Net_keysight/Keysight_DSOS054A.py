@@ -10,19 +10,21 @@ hostname = "192.168.2.3"                #hostname
 port = 5025                             #host tcp port
 #note that: every command should be termianated with a semicolon
 #========================================================#
-## plto function using gnuplot
-#
+## plot waveform via gnuplot with parameters
+# @param x_range x-axis range scope
+# @param y_range y2-axis range scope
+# @param ch1_offset channel one offset 
 def plot(x_range,y_range,ch1_offset):
-   XRange = "x_var='%.2f'"%(x_range) 
-   YRange = "y_var='%.2f'"%(y_range) 
-   CH1offset = "offset='%.2f'"%(ch1_offset) 
+   XRange = "x_var='%.2f'"%(x_range)            #xrange parameter 
+   YRange = "y_var='%.2f'"%(y_range)            #yrange parameter
+   CH1offset = "offset='%.2f'"%(ch1_offset)     #offset parameter
    print XRange,YRange,CH1offset
    subprocess.call("gnuplot -e %s -e %s -e %s keysight_oscilloscope.gp"%(XRange,YRange,CH1offset), shell = True)
    subprocess.call("eps2png -resolution 400 keysight_oscilloscope.eps", shell = True)
    subprocess.call("xdg-open keysight_oscilloscope.png", shell = True)
    print "OK"
 #========================================================#
-## main function
+## main function: sent oscilloscope commands and fetch data
 #
 def main():
     with open("./data_output.dat",'w') as outfile:
@@ -36,10 +38,9 @@ def main():
 
         ss.send(":WAVeform:YRANge?;")               #Query Y-axis range
         Y_Range = float(ss.recv(128)[1:])   
-        print "XRange:%f"%Y_Range
-        #Y_Factor = Y_Range/1024.0
+        print "YRange:%f"%Y_Range
         Y_Factor = Y_Range/980.0
-        print Y_Factor
+        #print Y_Factor
 
         ss.send(":ACQuire:POINts:ANALog?;")         #Query analog store depth
         Sample_point = int(ss.recv(128)[1:]) - 3   
@@ -65,20 +66,19 @@ def main():
         Sample_Rate = float(ss.recv(128)[1:])   
         print "Sample rate:%.1f"%Sample_Rate
         total_point = Sample_Rate * X_Range
-         
-        ss.send(":SYSTem:HEADer OFF;")              #Query analog store depth
-        ss.send(":WAVeform:SOURce CHANnel1;")       #
-        ss.send(":WAVeform:BYTeorder LSBFirst;")    #Query analog store depth
-        ss.send(":WAVeform:FORMat WORD;")           #Query analog store depth
-        ss.send(":WAVeform:STReaming 1;")           #Query analog store depth
-        #ss.send(":WAVeform:DATA? 1,%d;"%(Sample_Rate * 10 * Timebase_scale))                 #Query analog store depth
         print total_point
-        ss.send(":WAVeform:DATA? 1,%d;"%int(total_point))         #Query analog store depth
+
+        ss.send(":SYSTem:HEADer OFF;")              #Query analog store depth
+        ss.send(":WAVeform:SOURce CHANnel1;")       #Waveform source 
+        ss.send(":WAVeform:BYTeorder LSBFirst;")    #Waveform data byte order
+        ss.send(":WAVeform:FORMat WORD;")           #Waveform data format
+        ss.send(":WAVeform:STReaming 1;")           #Waveform streaming on
+        ss.send(":WAVeform:DATA? 1,%d;"%int(total_point))         #Query waveform data with start address and length
         n = total_point * 2 + 3
-        print "n = %d"%n
+        print "n = %d"%n                            #calculate fetching data byte number
         totalContent = ""
         totalRecved = 0
-        while totalRecved < n:
+        while totalRecved < n:                      #fetch data
             #print n, (n-totalRecved)
             onceContent = ss.recv(int(n - totalRecved))
             #print len(onceContent)
@@ -87,13 +87,13 @@ def main():
         print len(totalContent)
         length = len(totalContent[3:]) #print length
         print length/2
-        for i in xrange(length/2):
+        for i in xrange(length/2):                  #store data into file
             digital_number = ((ord(totalContent[3+i*2+1])<<8)+ord(totalContent[3+i*2]))>>6
             if (ord(totalContent[3+i*2+1]) & 0x80) == 0x80:             
-                outfile.write("%f %f\n"%(Xrange[i], ((digital_number-1007)*Y_Factor-CH1_Offset)))
+                outfile.write("%f %f\n"%(Xrange[i], ((digital_number-1007)*Y_Factor + CH1_Offset)))
             else:
-                outfile.write("%f %f\n"%(Xrange[i], ((digital_number+16)*Y_Factor-CH1_Offset)))
-    return [X_Range,Y_Range,CH1_Offset]
+                outfile.write("%f %f\n"%(Xrange[i], ((digital_number+16)*Y_Factor + CH1_Offset)))
+    return [X_Range,Y_Range,CH1_Offset]             #return gnuplot parameters
 #========================================================#
 ## if statement
 #
@@ -103,5 +103,5 @@ if __name__ == '__main__':
     xyrange = []
     xyrange = main()
     print xyrange 
-    plot(xyrange[0]*500,xyrange[1]*0.5,xyrange[2])
+    plot(xyrange[0]*500,xyrange[1]*0.5,xyrange[2])              #plot waveform using fetched data
     ss.close()
