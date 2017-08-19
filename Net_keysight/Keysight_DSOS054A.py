@@ -14,11 +14,12 @@ port = 5025                             #host tcp port
 # @param x_range x-axis range scope
 # @param y_range y2-axis range scope
 # @param ch1_offset channel one offset 
+# @param timebase_position x-axis timebase position 
 def plot(x_range,y_range,ch1_offset,timebase_position):
    XRange = "x_var='%.5f'"%(x_range)            #xrange parameter 
    YRange = "y_var='%.3f'"%(y_range)            #yrange parameter
    CH1offset = "offset='%.3f'"%(ch1_offset)     #offset parameter
-   Timebase_Position = "timebase_position='%.5f'"%(timebase_position)     #offset parameter
+   Timebase_Position = "timebase_position='%.5f'"%(timebase_position)     #timebase position parameter
    print XRange,YRange,CH1offset,Timebase_Position
    subprocess.call("gnuplot -e %s -e %s -e %s -e %s keysight_oscilloscope.gp"%(XRange,YRange,CH1offset,Timebase_Position), shell = True)
    subprocess.call("eps2png -resolution 400 keysight_oscilloscope.eps", shell = True)
@@ -33,7 +34,7 @@ def main():
         ss.send("*IDN?;")                           #read back device ID
         print "Instrument ID: %s"%ss.recv(128)   
 
-        ss.send(":TIMebase:POSition?;")               #Query X-axis range 
+        ss.send(":TIMebase:POSition?;")             #Query X-axis timebase position 
         Timebase_Poistion = float(ss.recv(128)[1:])*1000
         print "Timebase_Position:%.6f"%Timebase_Poistion
 
@@ -88,9 +89,9 @@ def main():
             totalContent += onceContent
             totalRecved = len(totalContent)
         print len(totalContent)
-        length = len(totalContent[3:]) #print length
+        length = len(totalContent[3:])              #print length
         print length/2
-        for i in xrange(length/2 - 1):                  #store data into file
+        for i in xrange(length/2 - 1):              #store data into file
             digital_number = ((ord(totalContent[3+i*2+1])<<8)+ord(totalContent[3+i*2]))>>6
             if (ord(totalContent[3+i*2+1]) & 0x80) == 0x80:             
                 outfile.write("%f %f\n"%(Xrange[i] + Timebase_Poistion, ((digital_number-1007)*Y_Factor + CH1_Offset)))
@@ -106,5 +107,5 @@ if __name__ == '__main__':
     xyrange = []
     xyrange = main()
     print xyrange 
-    plot(xyrange[0]*500,xyrange[1]*0.5,xyrange[2],xyrange[3])              #plot waveform using fetched data
+    plot(xyrange[0]*500,xyrange[1]*0.5,xyrange[2],xyrange[3])   #plot waveform using fetched data
     ss.close()
