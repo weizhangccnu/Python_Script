@@ -6,7 +6,8 @@ import time
 import socket
 import subprocess
 import numpy as np
-hostname = "192.168.2.3"                #hostname
+hostname = "192.168.2.3"                #wire network hostname
+#hostname = "10.146.93.141"              #wireless network hostname
 port = 5025                             #host tcp port
 #note that: every command should be termianated with a semicolon
 #========================================================#
@@ -20,8 +21,7 @@ def plot(x_range,y_range,ch1_offset,timebase_position,x_unit):
    YRange = "y_var='%.3f'"%(y_range)            #yrange parameter
    CH1offset = "offset='%.3f'"%(ch1_offset)     #offset parameter
    Timebase_Position = "timebase_position='%.5f'"%(timebase_position)     #timebase position parameter
-   Timebase_Position = "timebase_position='%.5f'"%(timebase_position)     #timebase position parameter
-   X_Unit = "x_unit='%d'"%(x_unit)
+   X_Unit = "x_unit='%d'"%(x_unit)              #x-axis unit parameter
    print XRange,YRange,CH1offset,Timebase_Position,X_Unit
    subprocess.call("gnuplot -e %s -e %s -e %s -e %s -e %s keysight_oscilloscope.gp"%(XRange,YRange,CH1offset,Timebase_Position,X_Unit), shell = True)
    subprocess.call("eps2png -resolution 400 keysight_oscilloscope.eps", shell = True)
@@ -76,7 +76,7 @@ def main():
         else:
             Xrange = np.arange((-X_Range*1000000000)/2.0,(X_Range*1000000000)/2.0,X_Range*1000000000.0/Sample_point)
             Timebase_Poistion_X = Timebase_Poistion * 1000000000.0
-        print Xrange
+        #print Xrange
         #time.sleep(10)
 
         ss.send(":ACQuire:SRATe:ANALog?;")          #Query sample rate
@@ -104,7 +104,7 @@ def main():
         print len(totalContent)
         length = len(totalContent[3:])              #print length
         print length/2
-        for i in xrange(length/2 - 1):              #store data into file
+        for i in xrange(length/2):              #store data into file
             digital_number = ((ord(totalContent[3+i*2+1])<<8)+ord(totalContent[3+i*2]))>>6
             if (ord(totalContent[3+i*2+1]) & 0x80) == 0x80:             
                 outfile.write("%f %f\n"%(Xrange[i] + Timebase_Poistion_X, ((digital_number-1007)*Y_Factor + CH1_Offset)))
