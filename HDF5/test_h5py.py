@@ -13,16 +13,19 @@ This python file is used to test h5py package
 def main():
     with open("./h5_output.dat",'w') as infile:
         f = h5py.File('TMS1mmSingleCSAOut1_1.h5','r')           #open .h5 file in read-only mode
+        print f.attrs.keys()                                    #get the name of all attributes attached to root group object
+        for attr in f.attrs:                                    #get each attributes values
+            print attr,":",f.attrs[attr]
         print f.keys()                                          #acquire dataset info 
         data = f['C0'].value                                    #fetch 'C0' dataset value
-        print type(f['C0'].value)                                    #fetch 'C0' dataset value
+        print data                                              #fetch 'C0' dataset value
         print len(data[0])
         for i in xrange(len(data[0])):
             if i < 1000000:                                     #fetch 100w data from 'C0' dataset
                 infile.write("%.2f\n"%data[0][i])
             else:
                 break
-        f.close()                                               #close hdf5 file                          
+        f.close()                                               #close hdf5 file      
 #----------------------------------------------------------------#
 if __name__ == "__main__":
     sys.exit(main())
