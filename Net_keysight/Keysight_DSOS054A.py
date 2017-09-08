@@ -6,8 +6,8 @@ import time
 import socket
 import subprocess
 import numpy as np
-hostname = "192.168.2.3"                #wire network hostname
-#hostname = "10.146.93.141"              #wireless network hostname
+#hostname = "192.168.2.3"                #wire network hostname
+hostname = "10.146.77.37"              #wireless network hostname
 port = 5025                             #host tcp port
 #note that: every command should be termianated with a semicolon
 #========================================================#
@@ -47,7 +47,8 @@ def main():
         ss.send(":WAVeform:YRANge?;")               #Query Y-axis range
         Y_Range = float(ss.recv(128)[1:])   
         print "YRange:%f"%Y_Range
-        Y_Factor = Y_Range/980.0
+        #Y_Factor = Y_Range/980.0
+        Y_Factor = Y_Range/62712.0
         #print Y_Factor
 
         ss.send(":ACQuire:POINts:ANALog?;")         #Query analog store depth
@@ -105,11 +106,11 @@ def main():
         length = len(totalContent[3:])              #print length
         print length/2
         for i in xrange(length/2):              #store data into file
-            digital_number = ((ord(totalContent[3+i*2+1])<<8)+ord(totalContent[3+i*2]))>>6
+            digital_number = (ord(totalContent[3+i*2+1])<<8)+ord(totalContent[3+i*2])
             if (ord(totalContent[3+i*2+1]) & 0x80) == 0x80:             
-                outfile.write("%f %f\n"%(Xrange[i] + Timebase_Poistion_X, ((digital_number-1007)*Y_Factor + CH1_Offset)))
+                outfile.write("%f %f\n"%(Xrange[i] + Timebase_Poistion_X, (digital_number - 65535+1000)*Y_Factor + CH1_Offset))
             else:
-                outfile.write("%f %f\n"%(Xrange[i] + Timebase_Poistion_X, ((digital_number+16)*Y_Factor + CH1_Offset)))
+                outfile.write("%f %f\n"%(Xrange[i] + Timebase_Poistion_X, (digital_number+1000)*Y_Factor + CH1_Offset))
     return [X_Range,Y_Range,CH1_Offset,Timebase_Poistion]             #return gnuplot parameters
 #========================================================#
 ## if statement
