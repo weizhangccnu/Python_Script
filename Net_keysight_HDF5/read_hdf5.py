@@ -7,7 +7,11 @@ from mpi4py import MPI
 import sys
 import os
 import time
-
+'''
+C datatype --------------> ctypes datatype
+size_t                      c_long
+hid_t                       c_int
+'''
 #------------------------------------------------------------------------#
 ##define a class
 #
@@ -37,7 +41,7 @@ def compare():
 #------------------------------------------------------------------------#
 def main():
     #hdf5iodll = cdll.LoadLibrary("./hdf5io.so")        #the first method to invoke dll library on Linux
-    hdf5iodll = CDLL("./hdf5io.so")                     #the second method to invoke dll library on linux 
+    hdf5iodll = CDLL("./hdf5io.so")                     #the second method to invoke dll library on Linux 
     #compare() 
     StructPointer._fields_ = [('x', c_long),('y',c_int),('next', POINTER(StructPointer))]
     hdf5iodll.test.restype = POINTER(StructPointer)
