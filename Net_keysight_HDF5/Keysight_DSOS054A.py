@@ -5,151 +5,230 @@ import sys
 import time
 import h5py
 import socket
+import ctypes
+from ctypes import *
 import subprocess
 import numpy as np
 #hostname = "192.168.2.3"               #wire network hostname
-hostname = "10.146.110.53"               #wireless network hostname
+hostname = "192.168.1.116"               #wireless network hostname
 port = 5025                             #host tcp port
+#------------------------------------------------------------------------#
+##define a class for HDF5IO_waveform_file struct
+#
+class HDF5IO_waveform_file(Structure):
+    _fields_ = [('waveFid', c_int),         #hid_t should be singed int type
+                ('nPt', c_ulong),
+                ('nCh', c_ulong),
+                ('nWfmPerChunk', c_ulong),
+                ('nEvent', c_ulong)]
+#------------------------------------------------------------------------#
+##define a class for waveform_attribute struct
+#
+class waveform_attribute(Structure):
+    _fields_ = [('chMask', c_uint),
+                ('nPt', c_ulong),
+                ('nFrames', c_ulong),
+                ('dt', c_double),
+                ('t0', c_double),
+                ('ymult', c_double*4),
+                ('yoff', c_double*4),
+                ('yzero', c_double*4)]
+#------------------------------------------------------------------------#
+##define a class for HDF5IO_waveform_event struct
+#
+class HDF5IO_waveform_event(Structure):
+    _fields_ = [('eventId', c_ulong),
+                ('wavBuf', c_char_p)]
+
+#------------------------------------------------------------------------#
+def query_data_from_scope(X_Range):
+    ss.send(":ACQuire:SRATe:ANALog?;")          #Query sample rate
+    Sample_Rate = float(ss.recv(128)[1:])   
+    print "Sample rate:%.1f"%Sample_Rate
+    total_point = Sample_Rate * X_Range
+    print total_point
+
+    ss.send(":SYSTem:HEADer OFF;")              #Query analog store depth
+    ss.send(":WAVeform:SOURce CHANnel1;")       #Waveform source 
+    ss.send(":WAVeform:BYTeorder LSBFirst;")    #Waveform data byte order
+    ss.send(":WAVeform:FORMat WORD;")           #Waveform data format
+    ss.send(":WAVeform:STReaming 1;")           #Waveform streaming on
+    ss.send(":WAVeform:DATA? 1,%d;"%int(total_point))         #Query waveform data with start address and length
+    n = total_point * 2 + 3
+    print "n = %d"%n                            #calculate fetching data byte number
+    totalContent = ""
+    totalRecved = 0
+    while totalRecved < n:                      #fetch data
+        #print n, (n-totalRecved)
+        onceContent = ss.recv(int(n - totalRecved))
+        #print len(onceContent)
+        totalContent += onceContent
+        totalRecved = len(totalContent)
+    length = len(totalContent)
+    print length-3
+    return [totalContent[3:length], length-3]
+
 #note that: every command should be terminated with a semicolon
-#========================================================#
+#------------------------------------------------------------------------#
 ## main function: sent oscilloscope commands and fetch data
 #
 def main():
-    with open("./data_output.dat",'w') as outfile:
-        ss.send("*IDN?;")                           #read back device ID
-        print "Instrument ID: %s"%ss.recv(128)   
+    hdf5iodll = CDLL("./hdf5io.so")             #invoke hdf5io.c share object
 
-        #dt = h5py.special_dtype(enum = (np.dtype('int32'), np.dtype('array')))
-        #print h5py.check_dtype(enum=dt)
-        ## create a TMIIa_CSAOut.h5 file with write and read method
-        filename = h5py.File('TMIIa_CSAOut.h5','a') #Read/Write if file exist; otherwise create
-        nEvents = int(sys.argv[1])                  #the first argumeent is nEvents 
-        print "nEvents: %d"%nEvents 
-        filename.attrs.create("nEvents", nEvents)
+    ss.send("*IDN?;")                           #read back device ID
+    print "Instrument ID: %s"%ss.recv(128)   
 
-        nWfmPerChunk = int(sys.argv[2])             #the second argument is nWfmPerChunk
-        print "nWfmPerChunk: %d"%nWfmPerChunk
-        filename.attrs.create("nWfmPerChunk", nWfmPerChunk)
+    nEvents = int(sys.argv[1])                  #the first argumeent is nEvents 
+    print "nEvents: %d"%nEvents 
 
-        nCh = int(sys.argv[3],16)                   #the third argument is nWfmPerChunk
-        print "nCh: %d"%nCh
-        filename.attrs.create("nCh", nCh)
-            
-        chMask = 4                                  #chMask
+    nWfmPerChunk = int(sys.argv[2])             #the second argument is nWfmPerChunk
+    print "nWfmPerChunk: %d"%nWfmPerChunk
 
-        ss.send(":ACQuire:POINts:ANALog?;")         #Query analog store depth
-        Sample_point = int(ss.recv(128)[1:]) - 3   
-        nPt = Sample_point
+    nCh = int(sys.argv[3],16)                   #the third argument is nWfmPerChunk
+    print "nCh: %d"%nCh
         
-        nFrame = 0
+    chMask = 4                                  #chMask
 
-        ss.send(":WAVeform:XRANge?;")               #Query X-axis range 
-        X_Range = float(ss.recv(128)[1:])
-        dt = X_Range
+    ss.send(":ACQuire:POINts:ANALog?;")         #Query analog store depth
+    Sample_point = int(ss.recv(128)[1:]) - 3   
+    nPt = Sample_point
+    print "nPt: %d"%nPt
+    
+    nFrame = 0
 
-        ss.send(":TIMebase:POSition?;")             #Query X-axis timebase position 
-        Timebase_Poistion = float(ss.recv(128)[1:])
-        t0 = Timebase_Poistion
-        print "t0:%.6f"%t0
+    ss.send(":WAVeform:XRANge?;")               #Query X-axis range 
+    X_Range = float(ss.recv(128)[1:])
+    dt = X_Range
 
-        ss.send(":WAVeform:YRANge?;")               #Query Y-axis range
-        Y_Range = float(ss.recv(128)[1:])   
-        Ymult = [Y_Range, 0.0, 0.0, 0.0]
-        print Ymult
+    ss.send(":TIMebase:POSition?;")             #Query X-axis timebase position 
+    Timebase_Poistion = float(ss.recv(128)[1:])
+    t0 = Timebase_Poistion
+    print "t0:%.6f"%t0
 
-        ss.send(":CHANnel1:OFFset?;")               #Channel1 Offset 
-        CH1_Offset = float(ss.recv(128)[1:])   
-        Yoff = [CH1_Offset, 0.0, 0.0, 0.0]
-        print Yoff 
-        
-        Yzero = [0, 0, 0, 0]
+    ss.send(":WAVeform:YRANge?;")               #Query Y-axis range
+    Y_Range = float(ss.recv(128)[1:])   
+    ymult = (Y_Range, 0.0, 0.0, 0.0)
+    print ymult
 
-        Waveform_Attributes = (chMask, nPt, nFrame, dt, t0, Ymult, Yoff, Yzero)
-        #Waveform_Attributes = (chMask, nPt, nFrame, dt, t0)
-        print Waveform_Attributes
+    ss.send(":CHANnel1:OFFset?;")               #Channel1 Offset 
+    CH1_Offset = float(ss.recv(128)[1:])   
+    yoff = (CH1_Offset, 0.0, 0.0, 0.0)
+    print yoff 
+    
+    yzero = (0.0, 0.0, 0.0, 1.0)
+    
+    ss.send(":TIMebase:POSition?;")             #Query X-axis timebase position 
+    Timebase_Poistion = float(ss.recv(128)[1:])
+    print "Timebase_Position:%.6f"%Timebase_Poistion
 
-        filename.attrs.create("Waveform Attributes", Waveform_Attributes, shape = None, dtype = object)
-        for attr in filename.attrs:                 #get each attributes values
-            print attr,":",filename.attrs[attr]
+    ss.send(":WAVeform:XRANge?;")               #Query X-axis range 
+    X_Range = float(ss.recv(128)[1:])
+    print "XRange:%f"%X_Range
 
-        ss.send(":TIMebase:POSition?;")             #Query X-axis timebase position 
-        Timebase_Poistion = float(ss.recv(128)[1:])
-        print "Timebase_Position:%.6f"%Timebase_Poistion
+    ss.send(":WAVeform:YRANge?;")               #Query Y-axis range
+    Y_Range = float(ss.recv(128)[1:])   
+    print "YRange:%f"%Y_Range
+    #Y_Factor = Y_Range/980.0
+    Y_Factor = Y_Range/62712.0
+    #print Y_Factor
 
-        ss.send(":WAVeform:XRANge?;")               #Query X-axis range 
-        X_Range = float(ss.recv(128)[1:])
-        print "XRange:%f"%X_Range
+    hdf5iodll.HDF5IO_open_file.restype = POINTER(HDF5IO_waveform_file)
+    wavFile = hdf5iodll.HDF5IO_open_file("TMIIaCSAOut.h5", nWfmPerChunk, nCh) 
+    print "wavFile->waveFid: %d"%wavFile.contents.waveFid
+    print "wavFile->nPt: %d"%wavFile.contents.nPt
+    print "wavFile->nCh: %d"%wavFile.contents.nCh
+    print "wavFile->nWfmPerChunk: %d"%wavFile.contents.nWfmPerChunk
+    print "wavFile->nEvent: %d"%wavFile.contents.nEvent
 
-        ss.send(":WAVeform:YRANge?;")               #Query Y-axis range
-        Y_Range = float(ss.recv(128)[1:])   
-        print "YRange:%f"%Y_Range
-        #Y_Factor = Y_Range/980.0
-        Y_Factor = Y_Range/62712.0
-        #print Y_Factor
+    wavAttr = pointer(waveform_attribute(chMask, nPt, nFrame, dt, t0, ymult, yoff, yzero))
+    hdf5iodll.HDF5IO_write_waveform_attribute_in_file_header.argtypes = [POINTER(HDF5IO_waveform_file), POINTER(waveform_attribute)]
+    # specified the return type
+    hdf5iodll.HDF5IO_read_waveform_attribute_in_file_header.restype = c_int
+    ret = hdf5iodll.HDF5IO_write_waveform_attribute_in_file_header(wavFile, wavAttr)
+    print "ret: %d"%ret
+    print "wavAttr->chMask: %d"%wavAttr.contents.chMask
+    print "wavAttr->nPt: %d"%wavAttr.contents.nPt
+    print "wavAttr->nFrames: %d"%wavAttr.contents.nFrames
+    print "wavAttr->dt: %f"%wavAttr.contents.dt
+    print "wavAttr->t0: %f"%wavAttr.contents.t0
+    print "wavAttr->ymult: %f %f %f %f"%(wavAttr.contents.ymult[0],wavAttr.contents.ymult[1],wavAttr.contents.ymult[2],wavAttr.contents.ymult[3])
+    print "wavAttr->yoff: %f %f %f %f"%(wavAttr.contents.yoff[0],wavAttr.contents.yoff[1],wavAttr.contents.yoff[2],wavAttr.contents.yoff[3])
+    print "wavAttr->yoff: %f %f %f %f"%(wavAttr.contents.yzero[0],wavAttr.contents.yzero[1],wavAttr.contents.yzero[2],wavAttr.contents.yzero[3])
 
-        ss.send(":ACQuire:POINts:ANALog?;")         #Query analog store depth
-        Sample_point = int(ss.recv(128)[1:]) - 3   
-        nPt = Sample_point
-        print "Sample Point:%d"%Sample_point
-        
-        ss.send(":WAVeform:XUNits?;")               #Query X-axis unit 
-        print "X-axis Unit:%s"%(ss.recv(128)[1:])   
+    ## write dataset
+    [scope_data, length] = query_data_from_scope(X_Range)
+    print length    
+    buf3 = c_int * (length/2)
+    scope_dat = []
+    for i in xrange(length/2):              #store data into file
+        scope_dat += [(ord(scope_data[i*2+1])<<8)+ord(scope_data[i*2])]
+    buf3 = scope_dat
 
-        ss.send(":WAVeform:YUNits?;")               #Query Y-axis unit 
-        print "Y-axis Unit:%s"%(ss.recv(128)[1:])   
+    buf = c_char_p()
+    buf.value = 'a'*200 
+    hdf5iodll.HDF5IO_write_event.argtypes = [POINTER(HDF5IO_waveform_file), POINTER(HDF5IO_waveform_event)]
+    hdf5iodll.HDF5IO_write_event.restype = c_int
+    wavEvent = pointer(HDF5IO_waveform_event(0, buf))
+    ret = hdf5iodll.HDF5IO_write_event(wavFile, wavEvent)
+    print "ret: %d"%ret
 
-        ss.send(":CHANnel1:OFFset?;")               #Channel1 Offset 
-        CH1_Offset = float(ss.recv(128)[1:])   
-        print "Channel 1 Offset:%f"%CH1_Offset
-        print "X_Range:%f"%X_Range 
-        if X_Range >= 2.0:
-            Xrange = np.arange(-X_Range/2.0,X_Range/2.0,X_Range*1.0/Sample_point)
-            Timebase_Poistion_X = Timebase_Poistion
-        elif X_Range < 2.0 and X_Range >= 0.002:
-            Xrange = np.arange((-X_Range*1000)/2.0,(X_Range*1000)/2.0,X_Range*1000.0/Sample_point)
-            Timebase_Poistion_X = Timebase_Poistion * 1000.0
-        elif X_Range < 0.002 and X_Range >= 0.000002:
-            Xrange = np.arange((-X_Range*1000000)/2.0,(X_Range*1000000)/2.0,X_Range*1000000.0/Sample_point)
-            Timebase_Poistion_X = Timebase_Poistion * 1000000.0
-        else:
-            Xrange = np.arange((-X_Range*1000000000)/2.0,(X_Range*1000000000)/2.0,X_Range*1000000000.0/Sample_point)
-            Timebase_Poistion_X = Timebase_Poistion * 1000000000.0
-        #print Xrange
-        #time.sleep(10)
+    ## flush hdf5 file
+    hdf5iodll.HDF5IO_flush_file.argtypes = [POINTER(HDF5IO_waveform_file)]    
+    hdf5iodll.HDF5IO_flush_file.restype = c_int
+    ret = hdf5iodll.HDF5IO_flush_file(wavFile)
+    print "ret: %d"%ret
 
-        ss.send(":ACQuire:SRATe:ANALog?;")          #Query sample rate
-        Sample_Rate = float(ss.recv(128)[1:])   
-        print "Sample rate:%.1f"%Sample_Rate
-        total_point = Sample_Rate * X_Range
-        print total_point
+    ## close hdf5 file
+    hdf5iodll.HDF5IO_close_file.argtypes = [POINTER(HDF5IO_waveform_file)]
+    hdf5iodll.HDF5IO_close_file.restype = c_int
+    ret = hdf5iodll.HDF5IO_close_file(wavFile)
+    print "ret: %d"%ret
+    
+    ##open file for read
+    hdf5iodll.HDF5IO_open_file_for_read.restype = POINTER(HDF5IO_waveform_file) 
+    wavFile = hdf5iodll.HDF5IO_open_file_for_read("TMIIaCSAOut.h5")
+    print "HDF5IO(waveform_file)->waveFid:%d"%wavFile.contents.waveFid
+    print "HDF5IO(waveform_file)->nPt:%d"%wavFile.contents.nPt
+    print "HDF5IO(waveform_file)->nCh:%d"%wavFile.contents.nCh
+    print "HDF5IO(waveform_file)->nWfmPerChunk:%d"%wavFile.contents.nWfmPerChunk
+    print "HDF5IO(waveform_file)->nEvent:%d"%wavFile.contents.nEvent
+    ## read waveform attribute
+    wavAttr = pointer(waveform_attribute(0x0a, 10000, 100, 0.0001, 0.0, (1.1,1.2,1.3,1.4), (1.0,1.0,1.0,1.0), (1.0,1.0,1.0,1.0)))
+    hdf5iodll.HDF5IO_read_waveform_attribute_in_file_header.argtypes = [POINTER(HDF5IO_waveform_file), POINTER(waveform_attribute)]
+    hdf5iodll.HDF5IO_read_waveform_attribute_in_file_header.restype = c_int 
+    ret = hdf5iodll.HDF5IO_read_waveform_attribute_in_file_header(wavFile, wavAttr)
+    print "ret: %d"%ret
+    print "wavAttr->chMask: %d"%wavAttr.contents.chMask
+    print "wavAttr->nFrames: %d"%wavAttr.contents.nFrames
+    print "wavAttr->dt: %f"%wavAttr.contents.dt
+    print "wavAttr->t0: %f"%wavAttr.contents.t0
+    print "wavAttr->ymult: %f %f %f %f"%(wavAttr.contents.ymult[0],wavAttr.contents.ymult[1],wavAttr.contents.ymult[2],wavAttr.contents.ymult[3])
+    print "wavAttr->yoff: %f %f %f %f"%(wavAttr.contents.yoff[0],wavAttr.contents.yoff[1],wavAttr.contents.yoff[2],wavAttr.contents.yoff[3])
+    print "wavAttr->yzero: %f %f %f %f"%(wavAttr.contents.yzero[0],wavAttr.contents.yzero[1],wavAttr.contents.yzero[2],wavAttr.contents.yzero[3])
 
-        ss.send(":SYSTem:HEADer OFF;")              #Query analog store depth
-        ss.send(":WAVeform:SOURce CHANnel1;")       #Waveform source 
-        ss.send(":WAVeform:BYTeorder LSBFirst;")    #Waveform data byte order
-        ss.send(":WAVeform:FORMat WORD;")           #Waveform data format
-        ss.send(":WAVeform:STReaming 1;")           #Waveform streaming on
-        ss.send(":WAVeform:DATA? 1,%d;"%int(total_point))         #Query waveform data with start address and length
-        n = total_point * 2 + 3
-        print "n = %d"%n                            #calculate fetching data byte number
-        totalContent = ""
-        totalRecved = 0
-        while totalRecved < n:                      #fetch data
-            #print n, (n-totalRecved)
-            onceContent = ss.recv(int(n - totalRecved))
-            #print len(onceContent)
-            totalContent += onceContent
-            totalRecved = len(totalContent)
-        print len(totalContent)
-        length = len(totalContent[3:])              #print length
-        print length/2
-        for i in xrange(length/2):              #store data into file
-            digital_number = (ord(totalContent[3+i*2+1])<<8)+ord(totalContent[3+i*2])
-            if (ord(totalContent[3+i*2+1]) & 0x80) == 0x80:             
-                #outfile.write("%f %f\n"%(Xrange[i] + Timebase_Poistion_X, (digital_number - 65535+1000)*Y_Factor + CH1_Offset))
-                pass
-            else:
-                pass
-                #outfile.write("%f %f\n"%(Xrange[i] + Timebase_Poistion_X, (digital_number+1000)*Y_Factor + CH1_Offset))
+    buf2 = c_char_p()
+    buf2.value = '0'*100
+    #print POINTER(c_char)(buf2)
+    wavEvent = pointer(HDF5IO_waveform_event(0,buf2))
+    hdf5iodll.HDF5IO_read_event.argtypes = [POINTER(HDF5IO_waveform_file), POINTER(HDF5IO_waveform_event)]
+    hdf5iodll.HDF5IO_read_event.restype = c_int   
+    ret = hdf5iodll.HDF5IO_read_event(wavFile, wavEvent)   
+    print "ret: %d"%ret
+
+    ## close hdf5 file
+    hdf5iodll.HDF5IO_close_file.argtypes = [POINTER(HDF5IO_waveform_file)]
+    hdf5iodll.HDF5IO_close_file.restype = c_int
+    ret = hdf5iodll.HDF5IO_close_file(wavFile)
+    print "ret: %d"%ret
+
+    #f = h5py.File('TMIIaCSAOut.h5','r')           #open .h5 file in read-only mode
+    #print f.attrs.keys()                                    #get the name of all attributes attached to root group object
+    #for attr in f.attrs:                                    #get each attributes values
+    #    print attr,":",f.attrs[attr]
+    #print f.keys()                                          #acquire dataset info 
+    #data = f['C0'].value                            
+    #print data
+    #print len(data[0])
 
 #========================================================#
 ## if statement
