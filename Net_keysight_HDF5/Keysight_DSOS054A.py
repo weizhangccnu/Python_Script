@@ -115,7 +115,7 @@ def main():
     yoff = (CH1_Offset, 0.0, 0.0, 0.0)
     print yoff 
     
-    yzero = (0.0, 0.0, 0.0, 1.0)
+    yzero = (0.0, 0.0, 0.0, 0.0)
     
     ss.send(":TIMebase:POSition?;")             #Query X-axis timebase position 
     Timebase_Poistion = float(ss.recv(128)[1:])
@@ -128,11 +128,10 @@ def main():
     ss.send(":WAVeform:YRANge?;")               #Query Y-axis range
     Y_Range = float(ss.recv(128)[1:])   
     print "YRange:%f"%Y_Range
-    #Y_Factor = Y_Range/980.0
     Y_Factor = Y_Range/62712.0
-    #print Y_Factor
 
     hdf5iodll.HDF5IO_open_file.restype = POINTER(HDF5IO_waveform_file)
+    hdf5iodll.HDF5IO_open_file.argtypes = [c_char_p, c_ulong, c_ulong]
     wavFile = hdf5iodll.HDF5IO_open_file("TMIIaCSAOut.h5", nWfmPerChunk, nCh) 
     print "wavFile->waveFid: %d"%wavFile.contents.waveFid
     print "wavFile->nPt: %d"%wavFile.contents.nPt
@@ -140,7 +139,7 @@ def main():
     print "wavFile->nWfmPerChunk: %d"%wavFile.contents.nWfmPerChunk
     print "wavFile->nEvent: %d"%wavFile.contents.nEvent
 
-    wavAttr = pointer(waveform_attribute(chMask, nPt, nFrame, dt, t0, ymult, yoff, yzero))
+    wavAttr = pointer(waveform_attribute(chMask, 2*nPt, nFrame, dt, t0, ymult, yoff, yzero))
     hdf5iodll.HDF5IO_write_waveform_attribute_in_file_header.argtypes = [POINTER(HDF5IO_waveform_file), POINTER(waveform_attribute)]
     # specified the return type
     hdf5iodll.HDF5IO_read_waveform_attribute_in_file_header.restype = c_int
@@ -158,17 +157,24 @@ def main():
     ## write dataset
     [scope_data, length] = query_data_from_scope(X_Range)
     print length    
-    buf3 = c_int * (length/2)
-    scope_dat = []
-    for i in xrange(length/2):              #store data into file
-        scope_dat += [(ord(scope_data[i*2+1])<<8)+ord(scope_data[i*2])]
-    buf3 = scope_dat
-
-    buf = c_char_p()
-    buf.value = 'a'*200 
+    time.sleep(2)
+    #print scope_data
+    #buf3 = c_int * (length/2)
+    #scope_dat = []
+    #for i in xrange(length/2):              #store data into file
+    #    print (ord(scope_data[i*2+1])<<8)+ord(scope_data[i*2])
+    buf2 = c_char_p()
+    buf2.value = ''
+    for i in xrange(length):
+        buf2.value += scope_data[i]
+    #buf = c_char_p()
+    #buf.value = 'a'*length 
     hdf5iodll.HDF5IO_write_event.argtypes = [POINTER(HDF5IO_waveform_file), POINTER(HDF5IO_waveform_event)]
     hdf5iodll.HDF5IO_write_event.restype = c_int
-    wavEvent = pointer(HDF5IO_waveform_event(0, buf))
+    #wavEvent = pointer(HDF5IO_waveform_event(0, buf))
+    #ret = hdf5iodll.HDF5IO_write_event(wavFile, wavEvent)
+    #print "ret: %d"%ret
+    wavEvent = pointer(HDF5IO_waveform_event(0, buf2))
     ret = hdf5iodll.HDF5IO_write_event(wavFile, wavEvent)
     print "ret: %d"%ret
 
@@ -185,6 +191,7 @@ def main():
     print "ret: %d"%ret
     
     ##open file for read
+    hdf5iodll.HDF5IO_open_file_for_read.argtypes = [c_char_p] 
     hdf5iodll.HDF5IO_open_file_for_read.restype = POINTER(HDF5IO_waveform_file) 
     wavFile = hdf5iodll.HDF5IO_open_file_for_read("TMIIaCSAOut.h5")
     print "HDF5IO(waveform_file)->waveFid:%d"%wavFile.contents.waveFid
@@ -199,6 +206,7 @@ def main():
     ret = hdf5iodll.HDF5IO_read_waveform_attribute_in_file_header(wavFile, wavAttr)
     print "ret: %d"%ret
     print "wavAttr->chMask: %d"%wavAttr.contents.chMask
+    print "wavAttr->nPt: %d"%wavAttr.contents.nPt
     print "wavAttr->nFrames: %d"%wavAttr.contents.nFrames
     print "wavAttr->dt: %f"%wavAttr.contents.dt
     print "wavAttr->t0: %f"%wavAttr.contents.t0
@@ -207,8 +215,7 @@ def main():
     print "wavAttr->yzero: %f %f %f %f"%(wavAttr.contents.yzero[0],wavAttr.contents.yzero[1],wavAttr.contents.yzero[2],wavAttr.contents.yzero[3])
 
     buf2 = c_char_p()
-    buf2.value = '0'*100
-    #print POINTER(c_char)(buf2)
+    #buf2.value = '0'*100
     wavEvent = pointer(HDF5IO_waveform_event(0,buf2))
     hdf5iodll.HDF5IO_read_event.argtypes = [POINTER(HDF5IO_waveform_file), POINTER(HDF5IO_waveform_event)]
     hdf5iodll.HDF5IO_read_event.restype = c_int   
@@ -221,15 +228,16 @@ def main():
     ret = hdf5iodll.HDF5IO_close_file(wavFile)
     print "ret: %d"%ret
 
-    #f = h5py.File('TMIIaCSAOut.h5','r')           #open .h5 file in read-only mode
-    #print f.attrs.keys()                                    #get the name of all attributes attached to root group object
-    #for attr in f.attrs:                                    #get each attributes values
-    #    print attr,":",f.attrs[attr]
-    #print f.keys()                                          #acquire dataset info 
-    #data = f['C0'].value                            
-    #print data
-    #print len(data[0])
-
+    f = h5py.File('TMIIaCSAOut.h5','r')           #open .h5 file in read-only mode
+    print f.attrs.keys()                                    #get the name of all attributes attached to root group object
+    for attr in f.attrs:                                    #get each attributes values
+        print attr,":",f.attrs[attr]
+    print f.keys()                                          #acquire dataset info 
+    data = f['C0'].value                            
+    print data
+    print len(data[0])
+    for i in xrange(nPt):
+        print ((data[0][i*2])<<8)+(data[0][i*2+1])
 #========================================================#
 ## if statement
 #
@@ -237,5 +245,3 @@ if __name__ == '__main__':
     ss = socket.socket(socket.AF_INET,socket.SOCK_STREAM)       #init local socket handle
     ss.connect((hostname,port))                                 #connect to the server
     main()
-    ss.close()                                                  #close socket
-
