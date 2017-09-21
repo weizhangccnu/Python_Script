@@ -4,18 +4,17 @@
 #include "common.h"
 #include "hdf5io.h"
 
-typedef struct StructPointerTest* StructPointer;  
-
-struct StructPointerTest{  
+struct StructPointerTest
+{  
     int x;  
     int y;  
 };  
 
-StructPointer test() 
+struct StructPointerTest *test(int a, int b)
 {  
-    StructPointer p = (StructPointer)malloc(sizeof(struct StructPointerTest));
-    p->x = 101;  
-    p->y = 201;  
+    struct StructPointerTest *p = (struct StructPointerTest *)malloc(sizeof(struct StructPointerTest));
+    p->x = a;  
+    p->y = b;  
     return p;
 } 
 
@@ -25,9 +24,8 @@ StructPointer test()
  * @Param[in] nWfmPerChunk
  * @Param[in] nCh
  * @return: a pointer of struct HDF5IO(waveform_file) data-type
- *
  */
-struct HDF5IO(waveform_file) *HDF5IO(open_file)(const char *fname,
+struct HDF5IO(waveform_file) *HDF5IO_open_file(const char *fname,
                                                 size_t nWfmPerChunk,
                                                 size_t nCh)
 {
@@ -98,7 +96,7 @@ struct HDF5IO(waveform_file) *HDF5IO(open_file)(const char *fname,
  * @param[in] *fname : hdf5 file name
  * return: a pointer of struct HDF5IO(waveform_file)
  */
-struct HDF5IO(waveform_file) *HDF5IO(open_file_for_read)(const char *fname)
+struct HDF5IO(waveform_file) *HDF5IO_open_file_for_read(const char *fname)
 {
     hid_t attrAid;
     herr_t ret;
@@ -129,6 +127,7 @@ struct HDF5IO(waveform_file) *HDF5IO(open_file_for_read)(const char *fname)
                               H5P_DEFAULT, H5P_DEFAULT);
     ret = H5Aread(attrAid, H5T_NATIVE_HSIZE, &(wavFile->nWfmPerChunk));
     H5Aclose(attrAid);
+
     attrAid = H5Aopen_by_name(wavFile->waveFid, "/", "nCh",
                               H5P_DEFAULT, H5P_DEFAULT);
     ret = H5Aread(attrAid, H5T_NATIVE_HSIZE, &(wavFile->nCh));
@@ -141,10 +140,9 @@ struct HDF5IO(waveform_file) *HDF5IO(open_file_for_read)(const char *fname)
 /* HDF5IO(close): close hdf5 file 
  * @param[in] HDF5IO(waveform_file) *waveFile
  */
-int HDF5IO(close_file)(struct HDF5IO(waveform_file) *wavFile)
+int HDF5IO_close_file(struct HDF5IO(waveform_file) *wavFile)
 {
     herr_t ret;
-
     ret = H5Fclose(wavFile->waveFid);       /* Terminates access to an HDF5 file */
     free(wavFile);                          /* release wavFile pointer */
     return (int)ret;
@@ -152,7 +150,7 @@ int HDF5IO(close_file)(struct HDF5IO(waveform_file) *wavFile)
 /* HDF5IO(flush_file): Flushes all buffers associated with a file to disk
  * @param[in] HDF5IO(waveform_file) *waveFile
  */
-int HDF5IO(flush_file)(struct HDF5IO(waveform_file) *wavFile)
+int HDF5IO_flush_file(struct HDF5IO(waveform_file) *wavFile)
 {
     hid_t attrAid;
     herr_t ret;
@@ -172,7 +170,7 @@ int HDF5IO(flush_file)(struct HDF5IO(waveform_file) *wavFile)
  * @param[in] struct HDF5IO(waveform_file) *waveFile
  * @param[in] struct waveform_attribute *wavAttr
  */
-int HDF5IO(write_waveform_attribute_in_file_header)(
+int HDF5IO_write_waveform_attribute_in_file_header(
     struct HDF5IO(waveform_file) *wavFile,
     struct waveform_attribute *wavAttr)
 {
@@ -198,30 +196,22 @@ int HDF5IO(write_waveform_attribute_in_file_header)(
      * @param[in] offset: Offset in memory structure of the field to insert
      * @param[in] field_id: Datatype identifier of the field to insert
      */
-    H5Tinsert(wavAttrTid, "wavAttr.chMask", HOFFSET(struct waveform_attribute, chMask),
-              H5T_NATIVE_UINT);
+    H5Tinsert(wavAttrTid, "wavAttr.chMask", HOFFSET(struct waveform_attribute, chMask), H5T_NATIVE_UINT);
 
-    H5Tinsert(wavAttrTid, "wavAttr.nPt", HOFFSET(struct waveform_attribute, nPt),
-              H5T_NATIVE_HSIZE);
-    H5Tinsert(wavAttrTid, "wavAttr.nFrames", HOFFSET(struct waveform_attribute, nFrames),
-              H5T_NATIVE_HSIZE);
+    H5Tinsert(wavAttrTid, "wavAttr.nPt", HOFFSET(struct waveform_attribute, nPt), H5T_NATIVE_HSIZE);
+    H5Tinsert(wavAttrTid, "wavAttr.nFrames", HOFFSET(struct waveform_attribute, nFrames), H5T_NATIVE_HSIZE);
     H5Tinsert(wavAttrTid, "wavAttr.dt", HOFFSET(struct waveform_attribute, dt), H5T_NATIVE_DOUBLE);
     H5Tinsert(wavAttrTid, "wavAttr.t0", HOFFSET(struct waveform_attribute, t0), H5T_NATIVE_DOUBLE);
-    H5Tinsert(wavAttrTid, "wavAttr.ymult",
-              HOFFSET(struct waveform_attribute, ymult), doubleArrayTid);
-    H5Tinsert(wavAttrTid, "wavAttr.yoff",
-              HOFFSET(struct waveform_attribute, yoff), doubleArrayTid);
-    H5Tinsert(wavAttrTid, "wavAttr.yzero",
-              HOFFSET(struct waveform_attribute, yzero), doubleArrayTid);
+    H5Tinsert(wavAttrTid, "wavAttr.ymult", HOFFSET(struct waveform_attribute, ymult), doubleArrayTid);
+    H5Tinsert(wavAttrTid, "wavAttr.yoff", HOFFSET(struct waveform_attribute, yoff), doubleArrayTid);
+    H5Tinsert(wavAttrTid, "wavAttr.yzero", HOFFSET(struct waveform_attribute, yzero), doubleArrayTid);
     /* Creates a new dataspace of a specified type
      * @param[in] H5S_SCALAR: a single element though that element may be of a complex datatype
      */
     wavAttrSid = H5Screate(H5S_SCALAR);
     
     rootGid = H5Gopen(wavFile->waveFid, "/", H5P_DEFAULT);
-
-    wavAttrAid = H5Acreate(rootGid, "Waveform Attributes", wavAttrTid, wavAttrSid,
-                           H5P_DEFAULT, H5P_DEFAULT);
+    wavAttrAid = H5Acreate(rootGid, "Waveform Attributes", wavAttrTid, wavAttrSid,H5P_DEFAULT, H5P_DEFAULT);
 
     ret = H5Awrite(wavAttrAid, wavAttrTid, wavAttr);
 
@@ -235,18 +225,25 @@ int HDF5IO(write_waveform_attribute_in_file_header)(
     return (int)ret;
 }
 
-int HDF5IO(read_waveform_attribute_in_file_header)(
+int HDF5IO_read_waveform_attribute_in_file_header(
     struct HDF5IO(waveform_file) *wavFile,
     struct waveform_attribute *wavAttr)
 {
     herr_t ret;
-
+    hid_t rootGid;
     hid_t wavAttrTid, wavAttrAid, doubleArrayTid;
     const hsize_t doubleArrayDims[1]={SCOPE_NCH};
     const unsigned doubleArrayRank = 1;
-
+    /* Creates an array datatype object
+     * @param[in] base_type_id: Datatype identifier for the array base datatype
+     * @param[in] rand: Rank of the array
+     * @param[in] dims: Size of each array dimension 
+     */
     doubleArrayTid = H5Tarray_create(H5T_NATIVE_DOUBLE, doubleArrayRank, doubleArrayDims);
-    
+    /* Creates a new datatype
+     * @param[in] class: class of datatype to create [H5T_COMPOUND, H5T_OPAQUE, H5T_ENUM, H5T_STRING]
+     * @param[in] size: the number of bytes in the datatype to create
+     */
     wavAttrTid = H5Tcreate(H5T_COMPOUND, sizeof(struct waveform_attribute));
 
     H5Tinsert(wavAttrTid, "wavAttr.chMask", HOFFSET(struct waveform_attribute, chMask),
@@ -263,9 +260,15 @@ int HDF5IO(read_waveform_attribute_in_file_header)(
               HOFFSET(struct waveform_attribute, yoff), doubleArrayTid);
     H5Tinsert(wavAttrTid, "wavAttr.yzero",
               HOFFSET(struct waveform_attribute, yzero), doubleArrayTid);
-
-    wavAttrAid = H5Aopen_by_name(wavFile->waveFid, "/", "Waveform Attributes",
-                                 H5P_DEFAULT, H5P_DEFAULT);
+    /* H5Aopen_by_name: opens an attribute for an object by object name and attribute name
+     */
+    wavAttrAid = H5Aopen_by_name(wavFile->waveFid, "/", "Waveform Attributes", H5P_DEFAULT, H5P_DEFAULT);
+  
+    /* H5Aread: Reads an attribute
+     * @param[in] attr_id: identifier of an attribute to read
+     * @param[in] mem_type_id: identifier of the attribute datatype (in memory)
+     * @param[out] *buf: Buffer for data to be read
+     */
     ret = H5Aread(wavAttrAid, wavAttrTid, wavAttr);
 
     H5Aclose(wavAttrAid);
@@ -276,7 +279,7 @@ int HDF5IO(read_waveform_attribute_in_file_header)(
     return (int)ret;
 }
 
-int HDF5IO(write_event)(struct HDF5IO(waveform_file) *wavFile,
+int HDF5IO_write_event(struct HDF5IO(waveform_file) *wavFile,
                         struct HDF5IO(waveform_event) *wavEvent)
 {
     char buf[NAME_BUF_SIZE];
@@ -304,7 +307,7 @@ int HDF5IO(write_event)(struct HDF5IO(waveform_file) *wavFile,
         H5Pset_chunk(chPid, 2, h5chunkDims);                \
         H5Pset_deflate(chPid, 6);                           \
                                                             \
-        chTid = H5Tcopy(H5T_NATIVE_CHAR);                   \
+        chTid = H5Tcopy(H5T_NATIVE_UCHAR);                   \
         chDid = H5Dcreate(rootGid, buf, chTid, chSid,       \
                           H5P_DEFAULT, chPid, H5P_DEFAULT); \
                                                             \
@@ -338,9 +341,9 @@ int HDF5IO(write_event)(struct HDF5IO(waveform_file) *wavFile,
     mOff[1] = 0;
     H5Sselect_hyperslab(mSid, H5S_SELECT_SET, mOff, NULL, slabDims, NULL);
     
-    ret = H5Dwrite(chDid, H5T_NATIVE_CHAR, mSid, chSid, H5P_DEFAULT,
+    ret = H5Dwrite(chDid, H5T_NATIVE_UCHAR, mSid, chSid, H5P_DEFAULT,
                    wavEvent->wavBuf);
-
+    //printf("%s\n", &wavEvent->wavBuf);
     wavFile->nEvents++;
 
     H5Sclose(mSid);
@@ -350,7 +353,11 @@ int HDF5IO(write_event)(struct HDF5IO(waveform_file) *wavFile,
     return (int)ret;
 }
 
-int HDF5IO(read_event)(struct HDF5IO(waveform_file) *wavFile,
+/* HDF5IO_read_event
+ * @param[in] wavFile: struct of HDF5IO_waveform_file
+ * @param[in] waveEvent: struct of HDF5IO_waveform_event
+ */
+int HDF5IO_read_event(struct HDF5IO(waveform_file) *wavFile,
                        struct HDF5IO(waveform_event) *wavEvent)
 {
     char buf[NAME_BUF_SIZE];
@@ -359,14 +366,19 @@ int HDF5IO(read_event)(struct HDF5IO(waveform_file) *wavFile,
     hid_t chSid, chDid;
     hid_t mSid;
     hsize_t slabOff[2], mOff[2], slabDims[2];
-    
     chunkId = wavEvent->eventId / wavFile->nWfmPerChunk;
     inChunkId = wavEvent->eventId % wavFile->nWfmPerChunk;
 
     snprintf(buf, NAME_BUF_SIZE, "/C%zd", chunkId);
+    /* H5Dopen: opens an existing dataset
+     * @param[in] loc_id: identifier fo the file or group within the dataset to be accessed will be found
+     * @param[in] name: Dataset name
+     * @param[in] dapl_id: Dataset access property list
+     */
     chDid = H5Dopen(wavFile->waveFid, buf, H5P_DEFAULT);
     /* H5Dget_space: Returns an identifier for a copy of the dataspace for a dataset
-     * H5Dget_space: Returns an identifier for a copy of the dataspace for a dataset
+     * @param[in] dataset_id: identifier of the dataset to query
+     * return a dataspace identifier if successful
      */
     chSid = H5Dget_space(chDid);
 
@@ -374,15 +386,33 @@ int HDF5IO(read_event)(struct HDF5IO(waveform_file) *wavFile,
     slabOff[1] = inChunkId * wavFile->nPt;
     slabDims[0] = wavFile->nCh;
     slabDims[1] = wavFile->nPt;
+    /* H5Sselect_hyperslab: selects a hyperslab region to add to the current selected region
+     * space_id: identifier of dataspace selection to modify
+     * op: Operation to perform on current selection 
+     * start: offset of start of hyperslab
+     * count: number of blocks include in hyperslab
+     * stride: hyperslab stride
+     * block: size of block in hyperslab
+     */
     H5Sselect_hyperslab(chSid, H5S_SELECT_SET, slabOff, NULL, slabDims, NULL);
-
+    /* H5Screate_simple: Creates a new simple dataspace and opens it for access
+     * @param[in] rank: number of dimensions of dataspace
+     * @param[in] current_dims: array specifying the size of each dimension
+     * @param[in] maximum_dims: array specifying the maximum size of each dimension
+     */
     mSid = H5Screate_simple(2, slabDims, NULL);
     mOff[0] = 0;
     mOff[1] = 0;
     H5Sselect_hyperslab(mSid, H5S_SELECT_SET, mOff, NULL, slabDims, NULL);
-
-    ret = H5Dread(chDid, H5T_NATIVE_CHAR, mSid, chSid, H5P_DEFAULT,
-                  wavEvent->wavBuf);
+    /* H5Dread: Reads raw data from a dataset into a buffer
+     * @param[in] dataset_id: identifier of the dataset read from
+     * @param[in] mem_type_id: identifier of the memory datatype
+     * @param[in] mem_space_id: identifier of the memory dataspace
+     * @param[in] file_space_id: identifier of the dataset's dataspace in the file
+     * @param[in] xfer_plist_id: identifier of a transfer property list for this I/O operation
+     * @param[out] buf: Buffer to receive data read from file
+     */
+    ret = H5Dread(chDid, H5T_NATIVE_UCHAR, mSid, chSid, H5P_DEFAULT, wavEvent->wavBuf);
 
     H5Sclose(mSid);
     H5Sclose(chSid);
