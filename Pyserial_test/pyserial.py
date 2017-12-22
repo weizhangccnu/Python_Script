@@ -5,7 +5,7 @@ import sys
 import time
 import struct
 import serial
-#-----------------------------------------------#
+#=================================================================#
 ## main function
 def main():
     ser = serial.Serial('/dev/ttyS0', 9600, timeout=0.5)    #open serial port
@@ -14,7 +14,7 @@ def main():
         print int(struct.unpack('B',ser.read(1))[0])
         time.sleep(0.05)                    #delay
     print "OK!"                             #stop
-#-----------------------------------------------#
+#=================================================================#
 ## if statement
 if __name__ == "__main__":
-    main()                              #execute main function
+    main()                                  #execute main function
