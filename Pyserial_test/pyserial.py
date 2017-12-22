@@ -12,8 +12,8 @@ def main():
     for i in xrange(1000000):               #read 100 charater from stm32
         ser.write('a')                      #sent charater 'a'
         print int(struct.unpack('B',ser.read(1))[0])
-        time.sleep(0.05)                #delay
-    print "OK!"                         #stop
+        time.sleep(0.05)                    #delay
+    print "OK!"                             #stop
 #-----------------------------------------------#
 ## if statement
 if __name__ == "__main__":
