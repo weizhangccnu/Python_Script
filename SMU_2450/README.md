@@ -1,2 +1,2 @@
 ## SMU 2450 LXI communication manual ##
-#### command should be terminated with '\n' ####
+#### 1. command should be terminated with '\n' ####
