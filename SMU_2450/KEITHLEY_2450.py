@@ -10,20 +10,20 @@ import numpy as np
 hostname = '192.168.2.100'                  #wire network hostname
 port = 5025                                 #host tcp port number
 #-------------------------------------------------------------------#
+## main function: used to test the resistor of the load
 def main():
     ss.send("*IDN?\n")                                          #command terminated with '\n'
     print "Instrument ID: %s"%ss.recv(50)
     ss.send("*RST\n")                                           #command terminated with '\n'
     ss.send(":SOUR:FUNC VOLT\n")
-    ss.send(':SENS:FUNC "CURR"\n')
-    ss.send("SENS:CURR:RANG 1\n")
-    ss.send("DISP:DIG 5\n")
-    ss.send("OUTP ON\n")
-    for i in xrange(30):
-        ss.send(":SOUR:VOLT %d\n"%i)
-        time.sleep(1)
-        ss.send(":READ?\n")
-        print ss.recv(100)
+    ss.send("SENS:CURR:RANG 1E-3\n")                            #set the current range 10mA
+    ss.send("DISP:DIG 6\n")                                     #display digital the max is 6
+    ss.send("OUTP ON\n")                                        #open output 
+    for i in xrange(201):                                       #voltage range 0-200
+        ss.send(":SOUR:VOLT %d\n"%i)                            #set output voltage
+        time.sleep(0.1)                                         #delay
+        ss.send(":READ?\n")                                     #read current of the output
+        print ss.recv(100)                                      #receive output current value
     ss.close()                                                  #close socket
     print "Ok!"
 #-------------------------------------------------------------------#
