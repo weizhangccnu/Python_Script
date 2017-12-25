@@ -19,16 +19,17 @@ def main():
     ss.send("SENS:CURR:RANG 1E-3\n")                            #set the current range 10mA
     ss.send("DISP:DIG 6\n")                                     #display digital the max is 6
     ss.send("OUTP ON\n")                                        #open output 
-    for i in xrange(201):                                       #voltage range 0-200
-        ss.send(":SOUR:VOLT %d\n"%i)                            #set output voltage
+    for i in xrange(2001):                                      #voltage range 0-200
+        step = i * 0.1
+        ss.send(":SOUR:VOLT %f\n"%step)                         #set output voltage
         time.sleep(0.1)                                         #delay
         ss.send(":READ?\n")                                     #read current of the output
-        print ss.recv(100)                                      #receive output current value
+        print "Output current: %s"%ss.recv(100)                 #receive output current value
     ss.close()                                                  #close socket
     print "Ok!"
 #-------------------------------------------------------------------#
 if __name__ == "__main__":
     ss = socket.socket(socket.AF_INET, socket.SOCK_STREAM)      #init local socket handle
     ss.connect((hostname, port))                                #connect to the instrument 
-    main()
+    main()                                                      #execute main function
 
