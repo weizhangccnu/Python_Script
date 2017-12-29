@@ -7,6 +7,7 @@ import subprocess
 import math
 import visa                     #windows instrument driver
 '''
+@author: Wei Zhang
 PC communicate with IT8811 electronic load via USB on Windows operating system
 Electronic load serial number: 13000919
 '''
