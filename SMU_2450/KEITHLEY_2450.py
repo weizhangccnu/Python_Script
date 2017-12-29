@@ -7,6 +7,10 @@ import socket
 import platform
 import subprocess
 import numpy as np
+'''
+@author: WeiZhang
+This python script is used to control the Source Meter Unit via LXI protocol
+'''
 hostname = '192.168.2.100'                  #wire network hostname
 port = 5025                                 #host tcp port number
 #-------------------------------------------------------------------#
