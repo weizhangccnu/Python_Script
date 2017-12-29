@@ -17,13 +17,14 @@ def main():
 	#instr = rm.open_resource('USB0::0x1AB1::0x09C4::DM3R172501112::INSTR')				#Rigol DM3058E
 	instr = rm.open_resource('USB0::0xFFFF::0x8800::017001106771101007::INSTR')			#IT8811 device ID number
 	print instr.query("*IDN?")															#fetch IT8811 device serial number
+	instr.write("SOURce:INPut ON")														#Enable electronic load input
 	for i in xrange(32):																#set constant current
 		step = i * 0.2																	#set step size
 		instr.write("SOURce:CURRent %f"%step)											#set constant current
 		time.sleep(1)																	#delay
 		print instr.query(":FETCh:VOLTage:DC?")                                         #Fetch the voltage value
 		print instr.query(":FETCh:Current:DC?") 										#Fetch current value
-	instr.write("SOURce:CURRentf 1")	                    							#Set constant current
+	instr.write("SOURce:CURRent 1")	                    								#Set constant current
 	instr.close()																		#close USB communication
 	print "OK!"																			#exectue over
 #*******************************************************************#
