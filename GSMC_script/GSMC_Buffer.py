@@ -22,7 +22,7 @@ Key_port = 5025                                 #host tcp port number
 ## save current time and ouput current
 def save_time_curr():
     with open("./time_current.dat", 'a') as infile:
-        ts = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time())) #acquire cuurent date and time
+        ts = time.strftime('%Y-%m-%d_%H:%M:%S', time.localtime(time.time())) #acquire cuurent date and time
         print ts
         s1.send(":READ?\n")                                     #read current of the output
         Output_current = float(s1.recv(100))                    #receive output current value
@@ -106,7 +106,7 @@ def fetch_data(filename):
                 outfile.write("%f %f\n"%(Xrange[i] + Timebase_Poistion_X, (digital_number - 65535+1000)*Y_Factor + CH1_Offset))
             else:
                 outfile.write("%f %f\n"%(Xrange[i] + Timebase_Poistion_X, (digital_number+1000)*Y_Factor + CH1_Offset))
-        print "fetch data over!!!"
+        print "fetch data over!!!\n"
 #-------------------------------------------------------------------#
 def timeFun(sched_Timer, time_slot):
     flag = 0
