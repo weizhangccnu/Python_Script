@@ -60,8 +60,8 @@ def main():
     print "Ok!"
 #-------------------------------------------------------------------------#
 if __name__ == "__main__":
-	s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)       #establish socket
-	s.connect((hostname, port))                                 #connet socket
-	main()                                                      #execute main function
-	s.close                                                     #close socket
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)       #establish socket
+    s.connect((hostname, port))                                 #connet socket
+    main()                                                      #execute main function
+    s.close                                                     #close socket
 
