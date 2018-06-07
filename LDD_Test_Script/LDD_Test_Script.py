@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+import sys
 import copy
 import time
 import visa
@@ -121,7 +122,7 @@ def capture_screen_image(filename, mode):
 		inst.write(":ACQuire:EYELine ON")					#turn eyeline one 
 		inst.write(":ACQuire:LTESt ALL")					#turn on limite acquire all channel
 		#print inst.query(":ACQuire:RUNTil?")	
-		inst.write(":ACQuire:RUNTil WAVeforms,300")			#set patten frame to 30
+		inst.write(":ACQuire:RUNTil WAVeforms,1000")		#set patten frame to 30
 		inst.write(":ACQuire:SSCReen DISK, '%s'"%filename)	#save screen image to disk
 		inst.write(":ACQuire:SSCReen:AREA SCReen")			#capture screen area 
 		inst.write(":ACQuire:SSCReen:IMAGe INVert")			#remove black background
@@ -138,9 +139,9 @@ def Scan_parameter(reg1, reg2):
                 0x40, 0x12,\
                 0x40, 0x12,\
                 0x40, 0x12,\
-                0x1c, 0x12,\
+				0x1c, 0x02,\
                 reg1, reg2,\
-                0x1c, 0x12,\
+                0x1c, 0x02,\
                 0x40, 0x12,\
                 0x40, 0x12,\
                 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,\
@@ -155,7 +156,7 @@ def Scan_parameter(reg1, reg2):
 ## main function
 def main():
 	#test_ddr3() 
-	Soc_mode = 1						# '1' denotes Jitter mode, '2' denotes Eye/Mask mode
+	Soc_mode = int(sys.argv[1])			# '1' denotes Jitter mode, '2' denotes Eye/Mask mode
 	Channel_number = 4					# LDD channel number
 	Ibias = 1							# Ibias 4-bit
 	Pre_Em = 3							# Pre_emphasis 2-bit
@@ -167,7 +168,10 @@ def main():
 	#Imod = j
 	reg1 = (Ibias << 4) | (Pre_Em << 2) | Eq
 	reg2 = (0x0f & Imod) | 0x00
-	filename = 'E:\ScreenImage_20180521_Crosstalk1\Board3_CH%d_%02x_%02x_10G_100mV_1_8Bias_RClose_CH3CH5_JITT.bmp'%(Channel_number, reg1, reg2)
+	if Soc_mode == 1:
+		filename = 'E:\ScreenImage_20180531_Crosstalk2\Board3_CH%d_%02x_%02x_10G_100mV_1_8Bias_TurnOnCH3CH5_RBiasTee_JITT.bmp'%(Channel_number, reg1, reg2)
+	else:
+		filename = 'E:\ScreenImage_20180531_Crosstalk2\Board3_CH%d_%02x_%02x_10G_100mV_1_8Bias_TurnOnCH3CH5_RBiasTee_EYE.bmp'%(Channel_number, reg1, reg2)
 	print filename
 	Scan_parameter(reg1,reg2)
 	iic_read_val = []
@@ -176,7 +180,7 @@ def main():
 	print "Read back iic register's data:" 
 	print iic_read_val
 	time.sleep(1)
-	#capture_screen_image(filename, Soc_mode)
+	capture_screen_image(filename, Soc_mode)
 	print "Scan Over!\n"
 	print "Ok"
 #--------------------------------------------------------------------------#
