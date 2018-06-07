@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+import sys
 import copy
 import time
 import visa
@@ -96,25 +97,25 @@ def capture_screen_image(filename, mode):
 	inst = rm.open_resource('GPIB0::7::INSTR')
 	print inst.query("*IDN?")
 	inst.write("*RST")									#set the instrument mode to default setup mode
-	time.sleep(0.5)
+	time.sleep(1)
 	if mode == 1:
 		inst.write(":SYSTem:MODE JITTer")					#set the instrument to Jitter mode
 		inst.write(":FUNCtion1:SUBTract CHANnel1,CHANnel2")
 		inst.write(":FUNCTION1:DISPLAY ON")
 		inst.write(":AUToscale")							#Autoscale instrument
-		time.sleep(0.2)
+		time.sleep(2)
 		inst.write(":ACQuire:RUNTil PATTerns,30")			#set patten frame to 30
 		inst.write(":ACQuire:SSCReen DISK, '%s'"%filename)	#save screen image to disk
 		inst.write(":ACQuire:SSCReen:AREA SCReen")			#capture screen area 
 		#inst.write(":ACQuire:SSCReen:IMAGe INVert")			#remove black background
-		time.sleep(38)										#delay for acquire limite
+		time.sleep(40)										#delay for acquire limite
 	else:
 		inst.write(":SYSTem:MODE EYE")						#set the instrument to Eye/Mask Mode
 		inst.write(":FUNCtion1:SUBTract CHANnel1,CHANnel2")
 		inst.write(":FUNCTION1:DISPLAY ON")
 		time.sleep(0.5)
 		inst.write(":AUToscale")							#Autoscale instrument
-		time.sleep(0.5)
+		time.sleep(20)
 		inst.write(":MEASure:CGRade:ZLEvel FUNCtion1")		#Measure Zero level 
 		inst.write(":MEASure:CGRade:OLEvel FUNCtion1")		#Measure One level
 		inst.write(":MEASure:FALLtime FUNCtion1")			#Measure Rise time 
@@ -123,7 +124,7 @@ def capture_screen_image(filename, mode):
 		inst.write(":ACQuire:EYELine ON")					#turn eyeline one 
 		inst.write(":ACQuire:LTESt ALL")					#turn on limite acquire all channel
 		#print inst.query(":ACQuire:RUNTil?")	
-		inst.write(":ACQuire:RUNTil WAVeforms,300")			#set patten frame to 30
+		inst.write(":ACQuire:RUNTil WAVeforms,1000")		#set patten frame to 1000
 		inst.write(":ACQuire:SSCReen DISK, '%s'"%filename)	#save screen image to disk
 		inst.write(":ACQuire:SSCReen:AREA SCReen")			#capture screen area 
 		inst.write(":ACQuire:SSCReen:IMAGe INVert")			#remove black background
@@ -131,22 +132,38 @@ def capture_screen_image(filename, mode):
 	print "capture screen image over!"
 #--------------------------------------------------------------------------#
 ## Scan parameter of TIA iic register
-def Write_Into_Parameter(reg1, reg2 ,reg3):
+def Write_Into_Parameter(reg1, reg2 ,reg3, bias):
 	print hex(reg1), hex(reg2), hex(reg3)
-	reg_data = [0x00,\
-			    0x07, 0x74, 0x29, 0x70,\
-			    0x07, 0x74, 0x29, 0x70,\
-			    0x07, 0x74, 0x29, 0x70,\
-			    0x07, 0x74, 0x29, 0x70,\
-			    0x07, 0x74, 0x29, 0x70,\
-			    0x07, 0x74, 0x29, 0x70,\
-			    0x07, reg1, reg2, reg3,\
-			    0x07, 0x74, 0x29, 0x70,\
-			    0x07, 0x74, 0x29, 0x70,\
-			    0x07, 0x74, 0x29, 0x70,\
-			    0x07, 0x74, 0x29, 0x70,\
-			    0x07, 0x74, 0x29, 0x70,\
-			    0x00, 0x00, 0x00]
+	if bias == 1:					# open other channel's tail current
+		reg_data = [0x00,\
+				    0x07, 0x04, 0x09, 0x00,\
+				    0x07, 0x04, 0x09, 0x00,\
+				    0x07, 0x04, 0x09, 0x00,\
+				    0x07, 0x04, 0x09, 0x00,\
+				    0x07, 0x04, 0x09, 0x00,\
+				    0x07, 0x04, 0x09, 0x00,\
+				    0x07, 0x04, 0x09, 0x00,\
+				    0x07, 0x04, 0x09, 0x00,\
+				    0x07, 0x04, 0x09, 0x00,\
+				    0x07, 0x04, 0x09, 0x00,\
+				    0x07, reg1, reg2, reg3,\
+				    0x07, 0x04, 0x09, 0x00,\
+				    0x00, 0x00, 0x00]
+	else:
+		reg_data = [0x00,\
+				    0x07, 0x72, 0x27, 0x70,\
+				    0x07, 0x72, 0x27, 0x70,\
+				    0x07, 0x72, 0x27, 0x70,\
+				    0x07, 0x72, 0x27, 0x70,\
+				    0x07, 0x72, 0x27, 0x70,\
+				    0x07, 0x72, 0x27, 0x70,\
+				    0x07, 0x72, 0x27, 0x70,\
+				    0x07, 0x72, 0x27, 0x70,\
+				    0x07, 0x72, 0x27, 0x70,\
+				    0x07, 0x72, 0x27, 0x70,\
+				    0x07, reg1, reg2, reg3,\
+				    0x07, 0x72, 0x27, 0x70,\
+				    0x00, 0x00, 0x00]
 	print "Write into iic register's data:"
 	print reg_data
 	for i in xrange(len(reg_data)):
@@ -164,25 +181,35 @@ def Read_Back_Parameter():
 #--------------------------------------------------------------------------#
 ## main function
 def main():
-	Soc_mode = 1						# '1' denotes Jitter mode, '2' denotes Eye/Mask mode
-	Channel_number = 7					# TIA channel number
-	TIACur = 0
+	Soc_mode = int(sys.argv[1])			# '1' denotes Jitter mode, '2' denotes Eye/Mask mode
+	bias = int(sys.argv[2])				# '1' turn off other channel's tail current, '2' turn on other channel's tail current
+	Channel_number = 11					# TIA channel number
+	TIACur = 7
 	TIAGain = 2
 	LACur = 2
-	LAGain = 9
+	LAGain = 7
 	ODAMPL = 7
 	PreEm = 0
 	for i in xrange(1):	
-		TIACur = 0
+		#LAGain = i
 		reg1 = TIACur << 4 | TIAGain 
 		reg2 = LACur << 4 | LAGain 
 		reg3 = ODAMPL << 4 | PreEm
-		filename = 'E:\ScreenImage_20180525_TIACUR\Board1_CH%d_%02x_%02x_%02x_10G_43mV_JITT.bmp'%(Channel_number, reg1, reg2, reg3)
+		if Soc_mode == 1:
+			if bias == 1:
+				filename = 'E:\ScreenImage_20180604_Crosstalk\Board1_CH%d_%02x_%02x_%02x_10G_TurnOff_25mV_TurnOffCH10_TurnOnCH12_JITT.bmp'%(Channel_number, reg1, reg2, reg3)
+			else:
+				filename = 'E:\ScreenImage_20180604_Crosstalk\Board1_CH%d_%02x_%02x_%02x_10G_TurnOn_25mV_TurnOffCH10_TurnOnCH12_JITT.bmp'%(Channel_number, reg1, reg2, reg3)
+		else:
+			if bias == 1:
+				filename = 'E:\ScreenImage_20180604_Crosstalk\Board1_CH%d_%02x_%02x_%02x_10G_TurnOff_25mV_TurnOffCH10_TurnOnCH12_EYE.bmp'%(Channel_number, reg1, reg2, reg3)
+			else:
+				filename = 'E:\ScreenImage_20180604_Crosstalk\Board1_CH%d_%02x_%02x_%02x_10G_TurnOn_25mV_TurnOffCH10_TurnOnCH12_EYE.bmp'%(Channel_number, reg1, reg2, reg3)
 		print filename
-		Write_Into_Parameter(reg1, reg2, reg3)
+		Write_Into_Parameter(reg1, reg2, reg3, bias)
 		Read_Back_Parameter()
 		time.sleep(1)
-		capture_screen_image(filename, Soc_mode)
+		#capture_screen_image(filename, Soc_mode)
 		print "Scan Over!\n"
 	print "Ok"
 #--------------------------------------------------------------------------#
