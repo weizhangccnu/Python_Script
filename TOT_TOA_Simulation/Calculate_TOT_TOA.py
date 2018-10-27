@@ -14,10 +14,7 @@ from scipy.stats import norm
 import matplotlib.font_manager as font_manager
 
 #======================================================================#
-#get data * 1e12 to get unit in ps and ease fitting
-# toa = df_toatot['toa'] * 1e12
-# tot = df_toatot['tot'] * 1e12
-
+## plot parameters
 hist_bins = 30                  # histogram bin counts
 lw_grid = 0.5                   # grid linewidth
 fig_dpi = 800                   # save figure's resolution
@@ -35,17 +32,22 @@ def func1(x, a, b, c, d):
 ## read .csv file contents
 def read_csv_file():
     with open("TOT_TOA_Rad123.csv", 'rb') as csvfile:
-        column_name = ['TOA_TDC (irrad=1) Y', 'TOA_TDC (irrad=2) Y', 'TOA_TDC (irrad=3) Y', 'TOT_TDC (irrad=1) Y', 'TOT_TDC (irrad=2) Y', 'TOT_TDC (irrad=3) Y']
-        data = [[] for i in xrange(6)]
-        print len(data)
-        for i in xrange(len(data)):
-            reader = csv.DictReader(csvfile)
-            data[i] = [row[column_name[i]] for row in reader]
-            print data[i]
+        reader = csv.reader(csvfile)
+        Data = [[] for i in xrange(6)]
+        print Data
+        i = 0
+        for row in reader:
+            i += 1
+            if i > 1:
+                for j in xrange(6):
+                    Data[j] += [float(row[j*2+1]) * 1e12]
+    return Data
 #======================================================================#
 ## fit data with fitting function
+# @param[in] toa: toa simulation data, datatype: list
+# @param[in] tot: tot simulation data, datatype: list
 # @return popt_toa
-def fit_data():
+def fit_data(toa, tot, figurename):
     popt_toa, pcov_toa = curve_fit(func1, tot, toa)
     plt.plot(tot, toa, 'b.', label='origin data')
     # #print fit
@@ -65,14 +67,15 @@ def fit_data():
     plt.yticks(family="Times New Roman", fontsize=8)
     plt.legend(fontsize=8, edgecolor='green')
     plt.grid(linestyle='-.', linewidth=lw_grid)
-    plt.savefig("TOT_vs_TOA.png", dpi=fig_dpi)
+    plt.savefig("TOT_vs_TOA_%s.png"%figurename, dpi=fig_dpi)
     # plt.show()
     plt.clf()
     return popt_toa
 
 #======================================================================#
 ## TOA fit before correction
-def toa_histogram():
+# @param[in] toa: toa simulation data, datatype: list
+def toa_histogram(toa, figurename):
     data = toa                          # toa data in the Excel
     mu, sigma = norm.fit(data)          # fit a normal distribution to the data
     print mu, sigma
@@ -94,12 +97,13 @@ def toa_histogram():
     plt.yticks(family="Times New Roman", fontsize=8)
     plt.grid(linestyle='-.', linewidth=lw_grid)
     plt.legend(fontsize=8, edgecolor='green')
-    plt.savefig("TOA_histogram.png", dpi=fig_dpi)
+    plt.savefig("TOA_histogram_%s.png"%figurename, dpi=fig_dpi)
     plt.clf()
     # plt.show()
 #======================================================================#
 ## TOT fit before correction
-def tot_histogram():
+# @param[in] tot: tot simulation data, datatype: list
+def tot_histogram(tot, figurename):
     data = tot                          # tot data in the Excel
     mu, sigma = norm.fit(data)          # fit a normal distribution to the data
     print mu, sigma
@@ -118,14 +122,15 @@ def tot_histogram():
     plt.yticks(family="Times New Roman", fontsize=8)
     plt.grid(linestyle='-.', linewidth=lw_grid)
     plt.legend(fontsize=8, edgecolor='green')
-    plt.savefig("TOT_histogram.png", dpi=fig_dpi)
+    plt.savefig("TOT_histogram_%s.png"%figurename, dpi=fig_dpi)
     # plt.show()
     plt.clf()
 #======================================================================#
 ## time walk correction and fit
 # @param[in] popt_toa:
-def data_correction(popt_toa):
-    toa_corrected = func1(tot, *popt_toa)       # toa data correction
+def data_correction(popt_toa, toa, tot, figurename):
+    tot_series = pd.Series(tot)
+    toa_corrected = func1(tot_series, *popt_toa)       # toa data correction
     data = toa - toa_corrected                  # error distribution
     mu, sigma = norm.fit(data)                  # fit a normal distribution to the data_correction
 
@@ -145,17 +150,22 @@ def data_correction(popt_toa):
     plt.yticks(family="Times New Roman", fontsize=8)
     plt.grid(linestyle='-.', linewidth=lw_grid)
     plt.legend(fontsize=8, edgecolor='green')
-    plt.savefig("TOA_Precision_Corrected.png", dpi=fig_dpi)
+    plt.savefig("TOA_Precision_Corrected_%s.png"%figurename, dpi=fig_dpi)
     # plt.show()
     plt.clf()
 #======================================================================#
 ## main function
 def main():
-    read_csv_file()
-    # popt_toa = fit_data()               # execute fit_data function
-    # toa_histogram()                     # execute toa_histogram function
-    # tot_histogram()                     # execute tot_histogram function
-    # data_correction(popt_toa)           # execute toa_corrected function
+
+    Data = read_csv_file()
+    for i in xrange(3):
+        figurename = "_Rad%s"%(i+1)
+        print figurename
+        popt_toa = fit_data(Data[3], Data[0], figurename)                   # execute fit_data function
+        print popt_toa
+        toa_histogram(Data[3], figurename)                                  # execute toa_histogram function
+        tot_histogram(Data[0], figurename)                                       # execute tot_histogram function
+        data_correction(popt_toa, Data[3], Data[0], figurename)                             # execute toa_corrected function
     print "OK!"
 #======================================================================#
 if __name__ == '__main__':
