@@ -19,7 +19,6 @@ hist_bins = 30                  # histogram bin counts
 lw_grid = 0.5                   # grid linewidth
 fig_dpi = 800                   # save figure's resolution
 #======================================================================#
-
 ## fitting function f(x) = a + b * (x**1) + c * (x**2) + d * (x**3)
 # @param[in] x: self-variable
 # @param[in] a: factor for x**0
@@ -34,7 +33,6 @@ def read_csv_file():
     with open("TOT_TOA_Rad123.csv", 'rb') as csvfile:
         reader = csv.reader(csvfile)
         Data = [[] for i in xrange(6)]
-        print Data
         i = 0
         for row in reader:
             i += 1
@@ -78,16 +76,14 @@ def fit_data(toa, tot, figurename):
 def toa_histogram(toa, figurename):
     data = toa                          # toa data in the Excel
     mu, sigma = norm.fit(data)          # fit a normal distribution to the data
-    print mu, sigma
-
+    # print mu, sigma
     plt.hist(data, bins=hist_bins, density=True, color='r', label='TOA histogram')
     xmin, xmax = plt.xlim()
     x_ticks = np.arange(xmin-100, xmax+100)
 
-    x = np.linspace(xmin, xmax, 1000)
+    x = np.linspace(xmin-100, xmax+100, 1000)
     p = norm.pdf(x, mu, sigma)
     plt.plot(x, p, color='b', linewidth=1.5, label='Fit results: ${\mu}$ = %.2f, ${\sigma}$ = %.2f'%(mu, sigma))
-
 
     plt.title("TOA Precision", family="Times New Roman", fontsize=12)
     plt.xlabel("TOA [ps]", family="Times New Roman", fontsize=10)
@@ -106,11 +102,11 @@ def toa_histogram(toa, figurename):
 def tot_histogram(tot, figurename):
     data = tot                          # tot data in the Excel
     mu, sigma = norm.fit(data)          # fit a normal distribution to the data
-    print mu, sigma
+    # print mu, sigma
     plt.hist(data, bins=hist_bins, density=True, color='r',label='TOT bin')
     xmin, xmax = plt.xlim()
     x_ticks = np.arange(xmin-100, xmax+100)
-    x = np.linspace(xmin, xmax, 1000)
+    x = np.linspace(xmin-100, xmax+100, 1000)
     p = norm.pdf(x, mu, sigma)
     plt.plot(x, p, color='b', linewidth=1.5, label='Fit results: ${\mu}$ = %.2f,  ${\sigma}$ = %.2f' % (mu, sigma))
 
@@ -130,16 +126,16 @@ def tot_histogram(tot, figurename):
 # @param[in] popt_toa:
 def data_correction(popt_toa, toa, tot, figurename):
     tot_series = pd.Series(tot)
-    toa_corrected = func1(tot_series, *popt_toa)       # toa data correction
-    data = toa - toa_corrected                  # error distribution
-    mu, sigma = norm.fit(data)                  # fit a normal distribution to the data_correction
+    toa_corrected = func1(tot_series, *popt_toa)        # toa data correction
+    data = toa - toa_corrected                          # error distribution
+    mu, sigma = norm.fit(data)                          # fit a normal distribution to the data_correction
 
     plt.hist(data, bins=hist_bins, density=True, color='r', label='hit bin')
 
     xmin, xmax = plt.xlim()
     x_ticks = np.arange(xmin-100, xmax+100)
 
-    x = np.linspace(xmin, xmax, 1000)
+    x = np.linspace(xmin-100, xmax+100, 1000)
     p = norm.pdf(x, mu, sigma)
     plt.plot(x, p, color='b', linewidth=1.5, label='Fit results: $\mu$ = %.2f, $\sigma$ = %.2f' % (mu, sigma))
     plt.title("TOA Precision Corrected", family="Times New Roman", fontsize=12)
@@ -156,17 +152,17 @@ def data_correction(popt_toa, toa, tot, figurename):
 #======================================================================#
 ## main function
 def main():
-
     Data = read_csv_file()
     for i in xrange(3):
-        figurename = "_Rad%s"%(i+1)
+        figurename = "Rad%s"%(i+1)
         print figurename
-        popt_toa = fit_data(Data[3], Data[0], figurename)                   # execute fit_data function
+        popt_toa = fit_data(Data[i+3], Data[i], figurename)                   # execute fit_data function
         print popt_toa
-        toa_histogram(Data[3], figurename)                                  # execute toa_histogram function
-        tot_histogram(Data[0], figurename)                                       # execute tot_histogram function
-        data_correction(popt_toa, Data[3], Data[0], figurename)                             # execute toa_corrected function
+        toa_histogram(Data[i+3], figurename)                                  # execute toa_histogram function
+        tot_histogram(Data[i], figurename)                                  # execute tot_histogram function
+        data_correction(popt_toa, Data[i+3], Data[i], figurename)             # execute toa_corrected function
     print "OK!"
 #======================================================================#
+## if statement
 if __name__ == '__main__':
     main()
