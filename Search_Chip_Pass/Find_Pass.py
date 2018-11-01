@@ -6,13 +6,20 @@ import os, os.path
 from collections import OrderedDict
 from pyexcel_xlsx import get_data
 from pyexcel_xlsx import save_data
+'''
+LOCx2 chips BER Check and EYE Check, This is a very interesting project for meself.
+DT is coming. AI is very important for our life.
+@author: Wei Zhang
+@date: Nov 1, 2018
+@address: SMU dallas TX
+'''
 #======================================================================#
 ## BER check for checking each chip pass or fail
 def BER_Check():
     with open("BER_Record.txt", 'w') as recordfile:
         rd_data = get_data("LOCx2 Passed Chips in Trays_20181101.xlsx")
-        print rd_data.keys()                                                       #print keys
-        sv_data = OrderedDict()
+        print rd_data.keys()                                                       # print keys
+        sv_data = OrderedDict()                                                    # Excel save directory
         print rd_data[rd_data.keys()[0]]
         print rd_data[rd_data.keys()[1]]
         print rd_data[rd_data.keys()[2]]
@@ -20,8 +27,8 @@ def BER_Check():
         len2 = len(rd_data.values()[0])
         len3 = len(rd_data.values()[0][0])
         print len1, len2, len3
-        sheet_data = [[[0 for y in xrange(len3)] for x in xrange(len2*2)] for z in xrange(len1)]
-        All_Chipid = []
+        sheet_data = [[[0 for y in xrange(len3)] for x in xrange(len2*2)] for z in xrange(len1)]                # create a sheet list for Excel
+        All_Chipid = []                                                                                         # restore All Chip ID
         for i in xrange(len1):
             for j in xrange(len2):
                 for k in xrange(len3):
@@ -31,12 +38,12 @@ def BER_Check():
                     All_Chipid += [rd_data[rd_data.keys()[i]][j][k]]
                     if search_ber_file(rd_data[rd_data.keys()[i]][j][k]) != "P" and search_ber_file(rd_data[rd_data.keys()[i]][j][k]) != "MP" and  rd_data[rd_data.keys()[i]][j][k] != 9008:    # list NP, NF chip location
                         recordfile.write("%s %2d %2d %s %s\n"%(rd_data.keys()[i], j, k, rd_data[rd_data.keys()[i]][j][k], search_ber_file(rd_data[rd_data.keys()[i]][j][k])))
-            sv_data.update({rd_data.keys()[i]: sheet_data[i]})                  # sheet_name and sheet_data
-        save_data("LOCx2 Passed Chips in Trays_20181101_BERChecked.xlsx", sv_data)        # save excel file
-        print All_Chipid                                                            # check unique chip_id
-        Repe_Chipid = [val for val in list(set(All_Chipid)) if All_Chipid.count(val) >= 2]      # search repeated  chip_id
-        print Repe_Chipid
-        with open("Uniqueness.txt", 'w') as uniquenessfile:
+            sv_data.update({rd_data.keys()[i]: sheet_data[i]})                              # sheet_name and sheet_data
+        save_data("LOCx2 Passed Chips in Trays_20181101_BERChecked.xlsx", sv_data)          # save excel file
+        print All_Chipid                                                                    # check unique chip_id
+        Repe_Chipid = [val for val in list(set(All_Chipid)) if All_Chipid.count(val) >= 2]  # search repeated  chip_id
+        print Repe_Chipid                                                                   # print repeated chip ID
+        with open("Uniqueness.txt", 'w') as uniquenessfile:                                 # save repeated chip ID to txt file
             for i in xrange(len1):
                 for j in xrange(len2):
                     for k in xrange(len3):
@@ -83,9 +90,9 @@ def EYE_Check():
         for i in xrange(len1):
             for j in xrange(len2):
                 for k in xrange(len3):
-                    print i, j, k
+                    print i, j, k                                                                           # print sheet number, row number, and column number
                     sheet_data[i][j*2][k] =  rd_data[rd_data.keys()[i]][j][k]
-                    if search_eye_file(rd_data[rd_data.keys()[i]][j][k], eye_record) == "MEP" or search_eye_file(rd_data[rd_data.keys()[i]][j][k], eye_record) == "EP":
+                    if search_eye_file(rd_data[rd_data.keys()[i]][j][k], eye_record) == "MEP" or search_eye_file(rd_data[rd_data.keys()[i]][j][k], eye_record) == "EP":         # use space replace "MEP" and "EP"
                         sheet_data[i][j*2+1][k] = " "
                     else:
                         sheet_data[i][j*2+1][k] = search_eye_file(rd_data[rd_data.keys()[i]][j][k], eye_record)
@@ -115,53 +122,53 @@ def search_ber_file(chip_id):
                             if line.split()[0] == 'Pass':
                                 Check_pass = 1
     # print filenum
-    if Check_pass == 1 and filenum == 1:
+    if Check_pass == 1 and filenum == 1:                        # one file and pass
         return "P"
-    elif Check_pass == 0 and filenum == 1:
+    elif Check_pass == 0 and filenum == 1:                      # one file and fail
         return "NP"
-    elif filenum == 0 :
+    elif filenum == 0 :                                         # no such file
         return "NF"
-    else:
-        if filetime[0][1] < filetime[1][1]:
+    else:                                                       # multifile check
+        if filetime[0][1] < filetime[1][1]:                     # last modified
             fp1 = filetime[0][0]
         else:
             fp1 = filetime[1][0]
-        Check_pass = 0
+        Check_pass = 0                                          # reset Check_pass variable
         with open(fp1, 'r') as chip_id_file:
-            for line in chip_id_file.readlines():
+            for line in chip_id_file.readlines():               # find Checkpass or not
                 if len(line.split()) == 1:
                     if line.split()[0] == 'Pass':
                         Check_pass = 1
         if Check_pass == 1:
-            return "MP"
+            return "MP"                                         # Multifile check pass
         else:
-            return "MF"
+            return "MF"                                         # Multifile check fail
 #======================================================================#
 ## search_eye_file in eye1 or eye2 directory
 def search_eye_file(chip_id, eye_record):
     eye_results = [eye_record[row] for row in xrange(len(eye_record)) if int(eye_record[row][0]) == chip_id]
     # print eye_results
     # print len(eye_results)
-    if len(eye_results) == 0:                       # no records
+    if len(eye_results) == 0:                                   # no records
         return "NR"
-    elif len(eye_results) == 1:                     # only one records
+    elif len(eye_results) == 1:                                 # only one records
         if eye_results[len(eye_results)-1][1] == '1':
             return "EP"
         else:
             return "EF"
-    else:                                           # more than one record
+    else:                                                       # more than one record
         if eye_results[len(eye_results)-1][1] == '1':
-            return "MEP"
+            return "MEP"                                        # multi-record Eye Pass
         else:
-            return "MEF"
+            return "MEF"                                        # multi-record Eye Fail
 #======================================================================#
 ## main function
 def main():
-    BER_Check()                         # Execute main function
-    # EYE_Check()                         # execute Eyediagram check
-    # print search_eye_file(6666)
-    # print search_ber_file(105)
-    print "Ok"                          # execute ended
+    BER_Check()                                                 # Execute main function
+    EYE_Check()                                                 # execute Eyediagram check
+    # print search_eye_file(6666)                               # test search_eye_file function
+    # print search_ber_file(105)                                # test search_ber_file function
+    print "Ok"                                                  # execute over
 #======================================================================#
 ## if statement
 if __name__ == "__main__":
