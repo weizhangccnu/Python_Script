@@ -13,3 +13,5 @@ for filename in os.listdir(path):		# Directory path
 ```
 ### 3. Sort file by modified time
   - [Sort file by modified time](https://blog.csdn.net/qq_18525247/article/details/79820246)
+### 4. File related link
+  - [File related link](https://blog.csdn.net/w122079514/article/details/16864403)
