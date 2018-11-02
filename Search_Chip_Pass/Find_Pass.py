@@ -8,18 +8,19 @@ from pyexcel_xlsx import get_data
 from pyexcel_xlsx import save_data
 '''
 LOCx2 chips BER Check and EYE Check, This is a very interesting project for me.
-DT is coming. AI is very important for our life.
+DT is coming. AI is very important for our life in future.
 @author: Wei Zhang
 @date: Nov 1, 2018
 @address: SMU dallas TX
 '''
+Excel_filename = "LOCx2 Passed Chips in Trays_20181102.xlsx"
 #======================================================================#
 ## BER check for checking each chip pass or fail
 def BER_Check():
     with open("BER_Record.txt", 'w') as recordfile:
-        rd_data = get_data("LOCx2 Passed Chips in Trays_20181102.xlsx")
-        print rd_data.keys()                                                       # print keys
-        sv_data = OrderedDict()                                                    # Excel save directory
+        rd_data = get_data(Excel_filename)
+        print rd_data.keys()                                                                                    # print keys
+        sv_data = OrderedDict()                                                                                 # Excel save directory
         print rd_data[rd_data.keys()[0]]
         print rd_data[rd_data.keys()[1]]
         print rd_data[rd_data.keys()[2]]
@@ -28,30 +29,43 @@ def BER_Check():
         len3 = len(rd_data.values()[0][0])
         print len1, len2, len3
         sheet_data = [[[0 for y in xrange(len3)] for x in xrange(len2*2)] for z in xrange(len1)]                # create a sheet list for Excel
-        All_Chipid = []                                                                                         # restore All Chip ID
         for i in xrange(len1):
             for j in xrange(len2):
                 for k in xrange(len3):
                     print i, j, k
-                    sheet_data[i][j*2][k] =  rd_data[rd_data.keys()[i]][j][k]
-                    sheet_data[i][j*2+1][k] = search_ber_file(rd_data[rd_data.keys()[i]][j][k])
-                    All_Chipid += [rd_data[rd_data.keys()[i]][j][k]]
+                    sheet_data[i][j*2][k] =  rd_data[rd_data.keys()[i]][j][k]                                   # Chip ID
+                    sheet_data[i][j*2+1][k] = search_ber_file(rd_data[rd_data.keys()[i]][j][k])                 # BER Check Results
                     if search_ber_file(rd_data[rd_data.keys()[i]][j][k]) != "BP" and search_ber_file(rd_data[rd_data.keys()[i]][j][k]) != "BMP" and  rd_data[rd_data.keys()[i]][j][k] != 9008:    # list NP, NF chip location
                         recordfile.write("%s %2d %2d %s %s\n"%(rd_data.keys()[i], j, k, rd_data[rd_data.keys()[i]][j][k], search_ber_file(rd_data[rd_data.keys()[i]][j][k])))
-            sv_data.update({rd_data.keys()[i]: sheet_data[i]})                              # sheet_name and sheet_data
-        save_data("LOCx2 Passed Chips in Trays_20181102_BERChecked.xlsx", sv_data)          # save excel file
-        # print All_Chipid                                                                  # check unique chip_id
-        Repe_Chipid = [val for val in list(set(All_Chipid)) if All_Chipid.count(val) >= 2]  # search repeated  chip_id
-        print "Repeted Chip ID:", Repe_Chipid                                               # print repeated chip ID
-        with open("Uniqueness.txt", 'w') as uniquenessfile:                                 # save repeated chip ID to txt file
-            for i in xrange(len1):
-                for j in xrange(len2):
-                    for k in xrange(len3):
-                        # print i, j, k
-                        for id in xrange(len(Repe_Chipid)):
-                            if Repe_Chipid[id] == rd_data[rd_data.keys()[i]][j][k] and Repe_Chipid[id] != 9008:
-                                print rd_data.keys()[i], j, k, rd_data[rd_data.keys()[i]][j][k]
-                                uniquenessfile.write("%s %2d %2d %s\n"%(rd_data.keys()[i], j, k, rd_data[rd_data.keys()[i]][j][k]))
+            sv_data.update({rd_data.keys()[i]: sheet_data[i]})                                                  # sheet_name and sheet_data
+        save_data("LOCx2 Passed Chips in Trays_20181102_BERChecked.xlsx", sv_data)                              # save excel file
+#======================================================================#
+## Unique Check
+def Unique_Check():
+    rd_data = get_data(Excel_filename)
+    sv_data = OrderedDict()
+    len1 = len(rd_data)
+    len2 = len(rd_data.values()[0])
+    len3 = len(rd_data.values()[0][0])                                                          # Excel save directory
+    sheet_data = [[[0 for y in xrange(len3)] for x in xrange(len2*2)] for z in xrange(len1)]    # create a sheet list for Excel
+    All_Chipid = []                                                                             # restore All Chip ID
+    for i in xrange(len1):
+        for j in xrange(len2):
+            for k in xrange(len3):
+                print i, j, k
+                All_Chipid += [rd_data[rd_data.keys()[i]][j][k]]
+        # print All_Chipid                                                                      # check unique chip_id
+    Repe_Chipid = [val for val in list(set(All_Chipid)) if All_Chipid.count(val) >= 2]          # search repeated  chip_id
+    print "Repeted Chip ID:", Repe_Chipid                                                       # print repeated chip ID
+    with open("Uniqueness.txt", 'w') as uniquenessfile:                                         # save repeated chip ID to txt file
+        for i in xrange(len1):
+            for j in xrange(len2):
+                for k in xrange(len3):
+                    # print i, j, k
+                    for id in xrange(len(Repe_Chipid)):
+                        if Repe_Chipid[id] == rd_data[rd_data.keys()[i]][j][k] and Repe_Chipid[id] != 9008:
+                            print rd_data.keys()[i], j, k, rd_data[rd_data.keys()[i]][j][k]
+                            uniquenessfile.write("%s %2d %2d %s\n"%(rd_data.keys()[i], j, k, rd_data[rd_data.keys()[i]][j][k]))
 #======================================================================#
 ## Eyediagram check
 def EYE_Check():
@@ -74,7 +88,7 @@ def EYE_Check():
             if value_row - name_row >= 2 and flag == 1 and name >= 10:
                 # print name_row, name, value
                 eye_record += [[name, value]]
-    rd_data = get_data("LOCx2 Passed Chips in Trays_20181102.xlsx")
+    rd_data = get_data(Excel_filename)
     print rd_data.keys()                                                       #print keys
     sv_data = OrderedDict()
     print rd_data[rd_data.keys()[0]]
@@ -120,9 +134,6 @@ def search_ber_file(chip_id):
                         if len(line.split()) == 1:
                             if line.split()[0] == 'Pass':
                                 Check_pass = 1
-    # if filenum >= 2:
-    #     print filenum
-    # print filetime
     if Check_pass == 1 and filenum == 1:                        # one file and pass
         return "BP"
     elif Check_pass == 0 and filenum == 1:                      # one file and fail
@@ -164,7 +175,8 @@ def search_eye_file(chip_id, eye_record):
 #======================================================================#
 ## main function
 def main():
-    BER_Check()                                                 # Execute main function
+    Unique_Check()
+    # BER_Check()                                                 # Execute main function
     # EYE_Check()                                                 # execute Eyediagram check
     # print search_eye_file(6666)                               # test search_eye_file function
     # print search_ber_file(1599)                                # test search_ber_file function
