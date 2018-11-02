@@ -17,7 +17,7 @@ DT is coming. AI is very important for our life.
 ## BER check for checking each chip pass or fail
 def BER_Check():
     with open("BER_Record.txt", 'w') as recordfile:
-        rd_data = get_data("LOCx2 Passed Chips in Trays_20181101.xlsx")
+        rd_data = get_data("LOCx2 Passed Chips in Trays_20181102.xlsx")
         print rd_data.keys()                                                       # print keys
         sv_data = OrderedDict()                                                    # Excel save directory
         print rd_data[rd_data.keys()[0]]
@@ -36,10 +36,10 @@ def BER_Check():
                     sheet_data[i][j*2][k] =  rd_data[rd_data.keys()[i]][j][k]
                     sheet_data[i][j*2+1][k] = search_ber_file(rd_data[rd_data.keys()[i]][j][k])
                     All_Chipid += [rd_data[rd_data.keys()[i]][j][k]]
-                    if search_ber_file(rd_data[rd_data.keys()[i]][j][k]) != "P" and search_ber_file(rd_data[rd_data.keys()[i]][j][k]) != "MP" and  rd_data[rd_data.keys()[i]][j][k] != 9008:    # list NP, NF chip location
+                    if search_ber_file(rd_data[rd_data.keys()[i]][j][k]) != "BP" and search_ber_file(rd_data[rd_data.keys()[i]][j][k]) != "BMP" and  rd_data[rd_data.keys()[i]][j][k] != 9008:    # list NP, NF chip location
                         recordfile.write("%s %2d %2d %s %s\n"%(rd_data.keys()[i], j, k, rd_data[rd_data.keys()[i]][j][k], search_ber_file(rd_data[rd_data.keys()[i]][j][k])))
             sv_data.update({rd_data.keys()[i]: sheet_data[i]})                              # sheet_name and sheet_data
-        save_data("LOCx2 Passed Chips in Trays_20181101_BERChecked.xlsx", sv_data)          # save excel file
+        save_data("LOCx2 Passed Chips in Trays_20181102_BERChecked.xlsx", sv_data)          # save excel file
         # print All_Chipid                                                                  # check unique chip_id
         Repe_Chipid = [val for val in list(set(All_Chipid)) if All_Chipid.count(val) >= 2]  # search repeated  chip_id
         print "Repeted Chip ID:", Repe_Chipid                                               # print repeated chip ID
@@ -74,7 +74,7 @@ def EYE_Check():
             if value_row - name_row >= 2 and flag == 1 and name >= 10:
                 # print name_row, name, value
                 eye_record += [[name, value]]
-    rd_data = get_data("LOCx2 Passed Chips in Trays_20181101.xlsx")
+    rd_data = get_data("LOCx2 Passed Chips in Trays_20181102.xlsx")
     print rd_data.keys()                                                       #print keys
     sv_data = OrderedDict()
     print rd_data[rd_data.keys()[0]]
@@ -92,15 +92,15 @@ def EYE_Check():
                 for k in xrange(len3):
                     print i, j, k                                                                           # print sheet number, row number, and column number
                     sheet_data[i][j*2][k] =  rd_data[rd_data.keys()[i]][j][k]
-                    if search_eye_file(rd_data[rd_data.keys()[i]][j][k], eye_record) == "MEP" or search_eye_file(rd_data[rd_data.keys()[i]][j][k], eye_record) == "EP":         # use space replace "MEP" and "EP"
+                    if search_eye_file(rd_data[rd_data.keys()[i]][j][k], eye_record) == "EMP" or search_eye_file(rd_data[rd_data.keys()[i]][j][k], eye_record) == "EP":         # use space replace "MEP" and "EP"
                         sheet_data[i][j*2+1][k] = " "
                     else:
                         sheet_data[i][j*2+1][k] = search_eye_file(rd_data[rd_data.keys()[i]][j][k], eye_record)
-                    if search_eye_file(rd_data[rd_data.keys()[i]][j][k], eye_record) != "EP" and search_eye_file(rd_data[rd_data.keys()[i]][j][k], eye_record) != "MEP" and rd_data[rd_data.keys()[i]][j][k] != 9008:    # list NR, EF, MEP, MEF chip location
+                    if search_eye_file(rd_data[rd_data.keys()[i]][j][k], eye_record) != "EP" and search_eye_file(rd_data[rd_data.keys()[i]][j][k], eye_record) != "EMP" and rd_data[rd_data.keys()[i]][j][k] != 9008:    # list NR, EF, MEP, MEF chip location
                         # print rd_data.keys()[i], j, k, rd_data[rd_data.keys()[i]][j][k], search_eye_file(rd_data[rd_data.keys()[i]][j][k])
                         eyerecordfile.write("%s %2d %2d %4d %s\n"%(rd_data.keys()[i], j, k, rd_data[rd_data.keys()[i]][j][k], search_eye_file(rd_data[rd_data.keys()[i]][j][k], eye_record)))
             sv_data.update({rd_data.keys()[i]: sheet_data[i]})                          # sheet_name and sheet_data
-    save_data("LOCx2 Passed Chips in Trays_20181101_EYEChecked.xlsx", sv_data)          # save excel file
+    save_data("LOCx2 Passed Chips in Trays_20181102_EYEChecked.xlsx", sv_data)          # save excel file
 #======================================================================#
 ## search file in directory
 def search_ber_file(chip_id):
@@ -124,11 +124,11 @@ def search_ber_file(chip_id):
     #     print filenum
     # print filetime
     if Check_pass == 1 and filenum == 1:                        # one file and pass
-        return "P"
+        return "BP"
     elif Check_pass == 0 and filenum == 1:                      # one file and fail
-        return "NP"
+        return "BF"
     elif filenum == 0 :                                         # no such file
-        return "NF"
+        return "BNR"
     else:                                                       # multifile check
         multifilepath.sort(key=lambda fn: os.path.getmtime(fn)) # sort by file modified time
         # print multifilepath[-1]
@@ -140,9 +140,9 @@ def search_ber_file(chip_id):
                     if line.split()[0] == 'Pass':
                         Check_pass = 1
         if Check_pass == 1:
-            return "MP"                                         # Multifile check pass
+            return "BMP"                                         # Multifile check pass
         else:
-            return "MF"                                         # Multifile check fail
+            return "BMF"                                         # Multifile check fail
 #======================================================================#
 ## search_eye_file in eye1 or eye2 directory
 def search_eye_file(chip_id, eye_record):
@@ -150,7 +150,7 @@ def search_eye_file(chip_id, eye_record):
     # print eye_results
     # print len(eye_results)
     if len(eye_results) == 0:                                   # no records
-        return "NR"
+        return "ENR"
     elif len(eye_results) == 1:                                 # only one records
         if eye_results[len(eye_results)-1][1] == '1':
             return "EP"
@@ -158,9 +158,9 @@ def search_eye_file(chip_id, eye_record):
             return "EF"
     else:                                                       # more than one record
         if eye_results[len(eye_results)-1][1] == '1':
-            return "MEP"                                        # multi-record Eye Pass
+            return "EMP"                                        # multi-record Eye Pass
         else:
-            return "MEF"                                        # multi-record Eye Fail
+            return "EMF"                                        # multi-record Eye Fail
 #======================================================================#
 ## main function
 def main():
