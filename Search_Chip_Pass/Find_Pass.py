@@ -7,7 +7,7 @@ from collections import OrderedDict
 from pyexcel_xlsx import get_data
 from pyexcel_xlsx import save_data
 '''
-LOCx2 chips BER Check and EYE Check, This is a very interesting project for meself.
+LOCx2 chips BER Check and EYE Check, This is a very interesting project for me.
 DT is coming. AI is very important for our life.
 @author: Wei Zhang
 @date: Nov 1, 2018
@@ -40,9 +40,9 @@ def BER_Check():
                         recordfile.write("%s %2d %2d %s %s\n"%(rd_data.keys()[i], j, k, rd_data[rd_data.keys()[i]][j][k], search_ber_file(rd_data[rd_data.keys()[i]][j][k])))
             sv_data.update({rd_data.keys()[i]: sheet_data[i]})                              # sheet_name and sheet_data
         save_data("LOCx2 Passed Chips in Trays_20181101_BERChecked.xlsx", sv_data)          # save excel file
-        print All_Chipid                                                                    # check unique chip_id
+        # print All_Chipid                                                                  # check unique chip_id
         Repe_Chipid = [val for val in list(set(All_Chipid)) if All_Chipid.count(val) >= 2]  # search repeated  chip_id
-        print Repe_Chipid                                                                   # print repeated chip ID
+        print "Repeted Chip ID:", Repe_Chipid                                               # print repeated chip ID
         with open("Uniqueness.txt", 'w') as uniquenessfile:                                 # save repeated chip ID to txt file
             for i in xrange(len1):
                 for j in xrange(len2):
@@ -105,23 +105,24 @@ def EYE_Check():
 ## search file in directory
 def search_ber_file(chip_id):
     Check_pass = 0
-    # File_exist = 0
-    path = "BER setup2"
+    path = "BER2"
     filenum = 0
-    filetime = []
+    multifilepath = []
     for filename in os.listdir(path):
-        if filename.find("%s"%chip_id) != -1:                 # find Chip_ID == filename
+        if filename.find("%s"%chip_id) != -1:                     # find Chip_ID == filename
             if filename.split('_')[1].split('p')[1] == "%s"%chip_id:
                 filenum += 1
-                # File_exist = 1
                 fp = os.path.join(path, filename)                 # find filepath
-                filetime += [[fp, os.path.getctime(fp)]]
+                # print os.path.getmtime(fp)
+                multifilepath += [fp]
                 with open(fp, 'r') as chip_id_file:
                     for line in chip_id_file.readlines():
                         if len(line.split()) == 1:
                             if line.split()[0] == 'Pass':
                                 Check_pass = 1
-    # print filenum
+    # if filenum >= 2:
+    #     print filenum
+    # print filetime
     if Check_pass == 1 and filenum == 1:                        # one file and pass
         return "P"
     elif Check_pass == 0 and filenum == 1:                      # one file and fail
@@ -129,10 +130,9 @@ def search_ber_file(chip_id):
     elif filenum == 0 :                                         # no such file
         return "NF"
     else:                                                       # multifile check
-        if filetime[0][1] < filetime[1][1]:                     # last modified
-            fp1 = filetime[0][0]
-        else:
-            fp1 = filetime[1][0]
+        multifilepath.sort(key=lambda fn: os.path.getmtime(fn)) # sort by file modified time
+        # print multifilepath[-1]
+        fp1 = multifilepath[-1]                                 # achieve last modified file
         Check_pass = 0                                          # reset Check_pass variable
         with open(fp1, 'r') as chip_id_file:
             for line in chip_id_file.readlines():               # find Checkpass or not
@@ -165,9 +165,9 @@ def search_eye_file(chip_id, eye_record):
 ## main function
 def main():
     BER_Check()                                                 # Execute main function
-    EYE_Check()                                                 # execute Eyediagram check
+    # EYE_Check()                                                 # execute Eyediagram check
     # print search_eye_file(6666)                               # test search_eye_file function
-    # print search_ber_file(105)                                # test search_ber_file function
+    # print search_ber_file(1599)                                # test search_ber_file function
     print "Ok"                                                  # execute over
 #======================================================================#
 ## if statement
