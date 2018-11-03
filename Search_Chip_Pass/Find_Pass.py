@@ -89,7 +89,7 @@ def EYE_Check():
                 # print name_row, name, value
                 eye_record += [[name, value]]
     rd_data = get_data(Excel_filename)
-    print rd_data.keys()                                                       #print keys
+    print rd_data.keys()                                    #print keys
     sv_data = OrderedDict()
     print rd_data[rd_data.keys()[0]]
     print rd_data[rd_data.keys()[1]]
@@ -137,7 +137,11 @@ def search_ber_file(chip_id):
     if Check_pass == 1 and filenum == 1:                        # one file and pass
         return "BP"
     elif Check_pass == 0 and filenum == 1:                      # one file and fail
-        return "BF"
+        Re_BF_Check = search_single_file(fp)                    # check single file due to this file is no Pass and ending line
+        if Re_BF_Check == 1:
+            return "BP"
+        else:
+            return "BF"
     elif filenum == 0 :                                         # no such file
         return "BNR"
     else:                                                       # multifile check
@@ -150,10 +154,53 @@ def search_ber_file(chip_id):
                 if len(line.split()) == 1:
                     if line.split()[0] == 'Pass':
                         Check_pass = 1
+
         if Check_pass == 1:
-            return "BMP"                                         # Multifile check pass
+            return "BMP"                                        # Multifile check pass
         else:
-            return "BMF"                                         # Multifile check fail
+            Re_BMP_Check = search_single_file(fp1)
+            if Re_BMP_Check == 1:
+                return "BMP"                                    # Multifile check fail
+            else:
+                return "BMF"                                    # Multifile check fail
+
+#======================================================================#
+## search single file
+def search_single_file(filepath):
+    # print filepath
+    counts = len(open(filepath, 'r').readlines())
+    cnt = 0
+    # print counts / 657
+    # print counts % 657
+    if counts / 657 == 1 and counts % 657 == 0:                 # 657 lines
+        cnt = 0
+    elif counts / 657 == 1 and counts % 657 == 2:               # 659 lines
+        cnt = 1
+    elif counts / 657 == 1 and counts % 657 >= 4 and counts % 657 <= 50:               # 660 lines
+        cnt = 2
+    else:
+        cnt = 3
+    # print "cnt: %d"%cnt
+    with open(filepath, 'r') as singlefile:
+        LineNum = [43, 64, 95, 116, 147, 168, 254, 275, 306, 327, 358, 379]
+        LineNum1 = [45, 66, 97, 118, 149, 170, 256, 277, 308, 329, 360, 381]
+        LineRes = []
+        i = 0                                                   # record row number
+        for line in singlefile.readlines():
+            i += 1
+            if cnt == 0 or cnt == 2:                                        # 657 lines
+                if i in LineNum:
+                    LineRes += [line.split()[0]]
+            elif cnt == 1:                                      # 659 lines
+                if i in LineNum1:
+                    LineRes += [line.split()[0]]
+            else:
+                LineRes = [0 for i in xrange(12)]
+        # print LineRes
+        if LineRes[0] == '0' and LineRes[1] == '0' and LineRes[2] == '0' and LineRes[3] == '0' and LineRes[4] == '0' and LineRes[5] == '0' or LineRes[6] == '1' or LineRes[7] == '1' or LineRes[8] == '1' or LineRes[9] == '1' or LineRes[10] == '1' or LineRes[11] == '1':
+            return 1
+        else:
+            return 0
 #======================================================================#
 ## search_eye_file in eye1 or eye2 directory
 def search_eye_file(chip_id, eye_record):
@@ -175,11 +222,11 @@ def search_eye_file(chip_id, eye_record):
 #======================================================================#
 ## main function
 def main():
-    Unique_Check()
-    # BER_Check()                                                 # Execute main function
-    # EYE_Check()                                                 # execute Eyediagram check
+    # Unique_Check()
+    BER_Check()                                                 # Execute main function
+    # EYE_Check()                                               # execute Eyediagram check
     # print search_eye_file(6666)                               # test search_eye_file function
-    # print search_ber_file(1599)                                # test search_ber_file function
+    # print search_ber_file(668)                                # test search_ber_file function
     print "Ok"                                                  # execute over
 #======================================================================#
 ## if statement
