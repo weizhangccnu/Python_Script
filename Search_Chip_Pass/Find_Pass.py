@@ -13,7 +13,7 @@ DT is coming. AI is very important for our life in future.
 @date: Nov 1, 2018
 @address: SMU dallas TX
 '''
-Excel_filename = "LOCx2 Passed Chips in Trays_20181102.xlsx"
+Excel_filename = "LOCx2 Passed Chips in Trays_20181107.xlsx"
 #======================================================================#
 ## BER check for checking each chip pass or fail
 def BER_Check():
@@ -38,7 +38,7 @@ def BER_Check():
                     if search_ber_file(rd_data[rd_data.keys()[i]][j][k]) != "BP" and search_ber_file(rd_data[rd_data.keys()[i]][j][k]) != "BMP" and  rd_data[rd_data.keys()[i]][j][k] != 9008:    # list NP, NF chip location
                         recordfile.write("%s %2d %2d %s %s\n"%(rd_data.keys()[i], j, k, rd_data[rd_data.keys()[i]][j][k], search_ber_file(rd_data[rd_data.keys()[i]][j][k])))
             sv_data.update({rd_data.keys()[i]: sheet_data[i]})                                                  # sheet_name and sheet_data
-        save_data("LOCx2 Passed Chips in Trays_20181102_BERChecked.xlsx", sv_data)                              # save excel file
+        save_data("LOCx2 Passed Chips in Trays_20181107_BERChecked.xlsx", sv_data)                              # save excel file
 #======================================================================#
 ## Unique Check
 def Unique_Check():
@@ -114,19 +114,19 @@ def EYE_Check():
                         # print rd_data.keys()[i], j, k, rd_data[rd_data.keys()[i]][j][k], search_eye_file(rd_data[rd_data.keys()[i]][j][k])
                         eyerecordfile.write("%s %2d %2d %4d %s\n"%(rd_data.keys()[i], j, k, rd_data[rd_data.keys()[i]][j][k], search_eye_file(rd_data[rd_data.keys()[i]][j][k], eye_record)))
             sv_data.update({rd_data.keys()[i]: sheet_data[i]})                          # sheet_name and sheet_data
-    save_data("LOCx2 Passed Chips in Trays_20181102_EYEChecked.xlsx", sv_data)          # save excel file
+    save_data("LOCx2 Passed Chips in Trays_20181107_EYEChecked.xlsx", sv_data)          # save excel file
 #======================================================================#
 ## search file in directory
 def search_ber_file(chip_id):
     Check_pass = 0
-    path = "BER2"
+    path = "BER_setup2"
     filenum = 0
     multifilepath = []
     for filename in os.listdir(path):
-        if filename.find("%s"%chip_id) != -1:                     # find Chip_ID == filename
+        if filename.find("%s"%chip_id) != -1:                       # find Chip_ID == filename
             if filename.split('_')[1].split('p')[1] == "%s"%chip_id:
                 filenum += 1
-                fp = os.path.join(path, filename)                 # find filepath
+                fp = os.path.join(path, filename)                   # find filepath
                 # print os.path.getmtime(fp)
                 multifilepath += [fp]
                 with open(fp, 'r') as chip_id_file:
@@ -134,35 +134,35 @@ def search_ber_file(chip_id):
                         if len(line.split()) == 1:
                             if line.split()[0] == 'Pass':
                                 Check_pass = 1
-    if Check_pass == 1 and filenum == 1:                        # one file and pass
+    if Check_pass == 1 and filenum == 1:                            # one file and pass
         return "BP"
-    elif Check_pass == 0 and filenum == 1:                      # one file and fail
-        Re_BF_Check = search_single_file(fp)                    # check single file due to this file is no Pass and ending line
+    elif Check_pass == 0 and filenum == 1:                          # one file and fail
+        Re_BF_Check = search_single_file(fp)                        # check single file due to this file is no Pass and ending line
         if Re_BF_Check == 1:
             return "BP"
         else:
             return "BF"
-    elif filenum == 0 :                                         # no such file
+    elif filenum == 0 :                                             # no such file
         return "BNR"
-    else:                                                       # multifile check
-        multifilepath.sort(key=lambda fn: os.path.getmtime(fn)) # sort by file modified time
+    else:                                                           # multifile check
+        multifilepath.sort(key=lambda fn: os.path.getmtime(fn))     # sort by file modified time
         # print multifilepath[-1]
-        fp1 = multifilepath[-1]                                 # achieve last modified file
-        Check_pass = 0                                          # reset Check_pass variable
+        fp1 = multifilepath[-1]                                     # achieve last modified file
+        Check_pass = 0                                              # reset Check_pass variable
         with open(fp1, 'r') as chip_id_file:
-            for line in chip_id_file.readlines():               # find Checkpass or not
+            for line in chip_id_file.readlines():                   # find Checkpass or not
                 if len(line.split()) == 1:
                     if line.split()[0] == 'Pass':
                         Check_pass = 1
 
         if Check_pass == 1:
-            return "BMP"                                        # Multifile check pass
+            return "BMP"                                            # Multifile check pass
         else:
             Re_BMP_Check = search_single_file(fp1)
             if Re_BMP_Check == 1:
-                return "BMP"                                    # Multifile check fail
+                return "BMP"                                        # Multifile check fail
             else:
-                return "BMF"                                    # Multifile check fail
+                return "BMF"                                        # Multifile check fail
 
 #======================================================================#
 ## search single file
@@ -172,9 +172,9 @@ def search_single_file(filepath):
     cnt = 0
     # print counts / 657
     # print counts % 657
-    if counts / 657 == 1 and counts % 657 == 0:                 # 657 lines
+    if counts / 657 == 1 and counts % 657 == 0:                     # 657 lines
         cnt = 0
-    elif counts / 657 == 1 and counts % 657 == 2:               # 659 lines
+    elif counts / 657 == 1 and counts % 657 == 2:                   # 659 lines
         cnt = 1
     elif counts / 657 == 1 and counts % 657 >= 4 and counts % 657 <= 50:               # 660 lines
         cnt = 2
@@ -185,13 +185,13 @@ def search_single_file(filepath):
         LineNum = [43, 64, 95, 116, 147, 168, 254, 275, 306, 327, 358, 379]
         LineNum1 = [45, 66, 97, 118, 149, 170, 256, 277, 308, 329, 360, 381]
         LineRes = []
-        i = 0                                                   # record row number
+        i = 0                                                       # record row number
         for line in singlefile.readlines():
             i += 1
-            if cnt == 0 or cnt == 2:                                        # 657 lines
+            if cnt == 0 or cnt == 2:                                # 657 lines
                 if i in LineNum:
                     LineRes += [line.split()[0]]
-            elif cnt == 1:                                      # 659 lines
+            elif cnt == 1:                                          # 659 lines
                 if i in LineNum1:
                     LineRes += [line.split()[0]]
             else:
@@ -204,7 +204,11 @@ def search_single_file(filepath):
 #======================================================================#
 ## search_eye_file in eye1 or eye2 directory
 def search_eye_file(chip_id, eye_record):
-    eye_results = [eye_record[row] for row in xrange(len(eye_record)) if int(eye_record[row][0]) == chip_id]
+    # print eye_record
+    # print type(eye_record[0][0])
+    # print type(int(eye_record[0][0]))
+    # print type(int(chip_id))
+    eye_results = [eye_record[row] for row in xrange(len(eye_record)) if eye_record[row][0] == "%s"%chip_id]
     # print eye_results
     # print len(eye_results)
     if len(eye_results) == 0:                                   # no records
@@ -222,9 +226,9 @@ def search_eye_file(chip_id, eye_record):
 #======================================================================#
 ## main function
 def main():
-    # Unique_Check()
+    Unique_Check()                                              # Unique check
     BER_Check()                                                 # Execute main function
-    # EYE_Check()                                               # execute Eyediagram check
+    EYE_Check()                                                 # execute Eyediagram check
     # print search_eye_file(6666)                               # test search_eye_file function
     # print search_ber_file(668)                                # test search_ber_file function
     print "Ok"                                                  # execute over
