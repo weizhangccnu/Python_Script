@@ -1,5 +1,5 @@
 ### 1. How draw bar graph and list convert to tuple
-```
+```python
 def sigma_column(data):
     n_groups = 3;
     Irrad1 = tuple(data[0])
