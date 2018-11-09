@@ -11,9 +11,9 @@ LOCx2 chips BER Check and EYE Check, This is a very interesting project for me.
 DT is coming. AI is very important for our life in future.
 @author: Wei Zhang
 @date: Nov 1, 2018
-@address: SMU dallas TX
+@address: SMU Dallas, TX
 '''
-Excel_filename = "LOCx2 Passed Chips in Trays_20181107.xlsx"
+Excel_filename = "LOCx2 Passed Chips in Trays_20181109.xlsx"
 #======================================================================#
 ## BER check for checking each chip pass or fail
 def BER_Check():
@@ -38,7 +38,7 @@ def BER_Check():
                     if search_ber_file(rd_data[rd_data.keys()[i]][j][k]) != "BP" and search_ber_file(rd_data[rd_data.keys()[i]][j][k]) != "BMP" and  rd_data[rd_data.keys()[i]][j][k] != 9008:    # list NP, NF chip location
                         recordfile.write("%s %2d %2d %s %s\n"%(rd_data.keys()[i], j, k, rd_data[rd_data.keys()[i]][j][k], search_ber_file(rd_data[rd_data.keys()[i]][j][k])))
             sv_data.update({rd_data.keys()[i]: sheet_data[i]})                                                  # sheet_name and sheet_data
-        save_data("LOCx2 Passed Chips in Trays_20181107_BERChecked.xlsx", sv_data)                              # save excel file
+        save_data("LOCx2 Passed Chips in Trays_20181109_BERChecked.xlsx", sv_data)                              # save excel file
 #======================================================================#
 ## Unique Check
 def Unique_Check():
@@ -114,12 +114,13 @@ def EYE_Check():
                         # print rd_data.keys()[i], j, k, rd_data[rd_data.keys()[i]][j][k], search_eye_file(rd_data[rd_data.keys()[i]][j][k])
                         eyerecordfile.write("%s %2d %2d %4d %s\n"%(rd_data.keys()[i], j, k, rd_data[rd_data.keys()[i]][j][k], search_eye_file(rd_data[rd_data.keys()[i]][j][k], eye_record)))
             sv_data.update({rd_data.keys()[i]: sheet_data[i]})                          # sheet_name and sheet_data
-    save_data("LOCx2 Passed Chips in Trays_20181107_EYEChecked.xlsx", sv_data)          # save excel file
+    save_data("LOCx2 Passed Chips in Trays_20181109_EYEChecked.xlsx", sv_data)          # save excel file
 #======================================================================#
 ## search file in directory
 def search_ber_file(chip_id):
     Check_pass = 0
-    path = "BER_setup2"
+    Check_fail = 0
+    path = "BER2"
     filenum = 0
     multifilepath = []
     for filename in os.listdir(path):
@@ -129,14 +130,22 @@ def search_ber_file(chip_id):
                 fp = os.path.join(path, filename)                   # find filepath
                 # print os.path.getmtime(fp)
                 multifilepath += [fp]
+                # print multifilepath
                 with open(fp, 'r') as chip_id_file:
                     for line in chip_id_file.readlines():
                         if len(line.split()) == 1:
                             if line.split()[0] == 'Pass':
                                 Check_pass = 1
+                            elif line.split()[0] == 'Fail':
+                                Check_fail = 1
+    # print multifilepath
+    # print Check_pass
+    # print Check_fail
     if Check_pass == 1 and filenum == 1:                            # one file and pass
         return "BP"
-    elif Check_pass == 0 and filenum == 1:                          # one file and fail
+    elif Check_fail == 1 and filenum == 1:
+        return "BF"
+    elif Check_pass == 0 and Check_fail == 0 and filenum == 1:                          # one file and fail
         Re_BF_Check = search_single_file(fp)                        # check single file due to this file is no Pass and ending line
         if Re_BF_Check == 1:
             return "BP"
@@ -210,7 +219,6 @@ def search_eye_file(chip_id, eye_record):
     # print type(int(chip_id))
     eye_results = [eye_record[row] for row in xrange(len(eye_record)) if eye_record[row][0] == "%s"%chip_id]
     # print eye_results
-    # print len(eye_results)
     if len(eye_results) == 0:                                   # no records
         return "ENR"
     elif len(eye_results) == 1:                                 # only one records
@@ -224,13 +232,46 @@ def search_eye_file(chip_id, eye_record):
         else:
             return "EMF"                                        # multi-record Eye Fail
 #======================================================================#
+## research_ber_check
+#@param[in] chip_id: chip ID number
+def repeated_ber_check():
+    Excel_filename = "Sinewave_BER1_Results.xlsx"               # Excel filename
+    rd_data = get_data(Excel_filename)
+    with open("BER_Record_20181109.txt", 'r') as ber_record_file, open("Repeat_BER_Check.txt", 'w') as reber_file:
+        for row in ber_record_file.readlines():
+            chip_id = row.split()[3]
+            Chip_Test = 0
+            Chip_Test1 = 0
+            Chip_Result = 0
+            result = "BNR"
+            for row in xrange(5, len(rd_data[rd_data.keys()[1]]), 1):
+                if rd_data[rd_data.keys()[1]][row][0] == int(chip_id):
+                    Chip_Test = 1                                       # Chip test
+                # print len(rd_data[rd_data.keys()[1]][row])
+                if len(rd_data[rd_data.keys()[1]][row]) >= 25:
+                    if rd_data[rd_data.keys()[1]][row][0] == int(chip_id):
+                        # print rd_data[rd_data.keys()[1]][row]
+                        Chip_Test1 = 1
+                        Chip_Result = rd_data[rd_data.keys()[1]][row][24]
+            if Chip_Test == 1 and Chip_Test1 == 0:
+                result = "BFNT"
+            elif Chip_Test1 == 1 and Chip_Result == 1:
+                result = "BP"
+            elif Chip_Test == 0 and Chip_Test1 == 0:
+                result = "BNR"
+            else:
+                result = "BF"
+            print chip_id, result
+            reber_file.write("%s %s\n"%(chip_id, result))
+#======================================================================#
 ## main function
 def main():
-    Unique_Check()                                              # Unique check
-    BER_Check()                                                 # Execute main function
-    EYE_Check()                                                 # execute Eyediagram check
-    # print search_eye_file(6666)                               # test search_eye_file function
-    # print search_ber_file(668)                                # test search_ber_file function
+    # Unique_Check()                                              # Unique check
+    # BER_Check()                                                 # Execute main function
+    # EYE_Check()                                                 # execute Eyediagram check
+    # print search_eye_file(3143)                               # test search_eye_file function
+    # print search_ber_file(5768)                                # test search_ber_file function
+    repeated_ber_check()
     print "Ok"                                                  # execute over
 #======================================================================#
 ## if statement
