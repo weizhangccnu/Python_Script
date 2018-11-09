@@ -233,13 +233,12 @@ def search_eye_file(chip_id, eye_record):
             return "EMF"                                        # multi-record Eye Fail
 #======================================================================#
 ## research_ber_check
-#@param[in] chip_id: chip ID number
 def repeated_ber_check():
     Excel_filename = "Sinewave_BER1_Results.xlsx"               # Excel filename
     rd_data = get_data(Excel_filename)
-    with open("BER_Record_20181109.txt", 'r') as ber_record_file, open("Repeat_BER_Check.txt", 'w') as reber_file:
+    with open("BER_Record_20181109.txt", 'r') as ber_record_file, open("Repeat_BER_Check.txt", 'w') as reber_file:      # BER Record file
         for row in ber_record_file.readlines():
-            chip_id = row.split()[3]
+            chip_id = row.split()[3]                            # achieve chip id
             Chip_Test = 0
             Chip_Test1 = 0
             Chip_Result = 0
@@ -269,9 +268,9 @@ def main():
     # Unique_Check()                                              # Unique check
     # BER_Check()                                                 # Execute main function
     # EYE_Check()                                                 # execute Eyediagram check
-    # print search_eye_file(3143)                               # test search_eye_file function
-    # print search_ber_file(5768)                                # test search_ber_file function
-    repeated_ber_check()
+    # print search_eye_file(3143)                                 # test search_eye_file function
+    # print search_ber_file(5768)                                 # test search_ber_file function
+    # repeated_ber_check()                                        # repeated check ber
     print "Ok"                                                  # execute over
 #======================================================================#
 ## if statement
