@@ -6,6 +6,12 @@ import os, os.path
 from collections import OrderedDict
 from pyexcel_xlsx import get_data
 from pyexcel_xlsx import save_data
+import numpy as np
+
+import matplotlib.pyplot as plt
+from matplotlib import gridspec
+from scipy.optimize import curve_fit
+from scipy.stats import norm
 '''
 LOCx2 chips BER Check and EYE Check, This is a very interesting project for me.
 DT is coming. AI is very important for our life in future.
@@ -14,10 +20,16 @@ DT is coming. AI is very important for our life in future.
 @address: SMU Dallas, TX
 '''
 Excel_filename = "LOCx2 Passed Chips in Trays_20181109.xlsx"
+
+#======================================================================#
+## plot parameters
+hist_bins = 40                  # histogram bin counts
+lw_grid = 0.5                   # grid linewidth
+fig_dpi = 800                   # save figure's resolution
 #======================================================================#
 ## BER check for checking each chip pass or fail
 def BER_Check():
-    with open("BER_Record.txt", 'w') as recordfile:
+    with open("BER_Record_20181109.txt", 'w') as recordfile:
         rd_data = get_data(Excel_filename)
         print rd_data.keys()                                                                                    # print keys
         sv_data = OrderedDict()                                                                                 # Excel save directory
@@ -243,7 +255,7 @@ def repeated_ber_check():
             Chip_Test1 = 0
             Chip_Result = 0
             result = "BNR"
-            for row in xrange(5, len(rd_data[rd_data.keys()[1]]), 1):
+            for row in xrange(4, len(rd_data[rd_data.keys()[1]]), 1):
                 if rd_data[rd_data.keys()[1]][row][0] == int(chip_id):
                     Chip_Test = 1                                       # Chip test
                 # print len(rd_data[rd_data.keys()[1]][row])
@@ -263,6 +275,79 @@ def repeated_ber_check():
             print chip_id, result
             reber_file.write("%s %s\n"%(chip_id, result))
 #======================================================================#
+## current statistics
+def current_statistics():
+    filename = "LOCx2_QA_spring2018_Eye1_Eye2.txt"          # eye test results record file
+    i = 0                                                   # record row number
+    name_row = 0                                            # chip id row number
+    value_row = 0                                           # pass row number
+    eye_record = []                                         # eye record list
+    chipid_row = 0
+    chip_current = []                                       # chip current record
+    current_statistics = []
+    with open(filename, 'r') as eyefile:                    # read eye1 and eye.txt file
+        for line in eyefile.readlines():
+            i += 1
+            flag = 0
+            if len(line.split()) == 34:
+                chipid_row = i
+                chipid = line.split()[0]
+            elif len(line.split()) != 34:
+                flag = 1
+                value_row = i
+            if value_row - chipid_row >= 1 and flag == 1 and (line.split()[0] == '40' or line.split()[0] == '40.0') and line.split()[1] == '1':
+                # print i,  chipid_row, chipid, line.split()[0],  line.split()[1], type(line.split()[2])
+                chip_current += [[chipid, line.split()[2]]]
+        # print chip_current
+    with open("over_three_sigma.txt", 'w') as outfile:
+        rd_data = get_data(Excel_filename)
+        len1 = len(rd_data)
+        len2 = len(rd_data.values()[0])
+        len3 = len(rd_data.values()[0][0])                                                          # Excel save directory
+        sheet_data = [[[0 for y in xrange(len3)] for x in xrange(len2*2)] for z in xrange(len1)]    # create a sheet list for Excel
+        for i in xrange(len1):
+            for j in xrange(len2):
+                for k in xrange(len3):
+                    if rd_data[rd_data.keys()[i]][j][k] != 9008:
+                        # print rd_data.keys()[i], j+1, k+1, rd_data[rd_data.keys()[i]][j][k], [val[1] for val in chip_current if val[0] == '%s'%rd_data[rd_data.keys()[i]][j][k]][-1]
+                        singlechip_current = float([val[1] for val in chip_current if val[0] == '%s'%rd_data[rd_data.keys()[i]][j][k]][-1])
+                        current_statistics += [singlechip_current]
+                        if singlechip_current < 299.99 or singlechip_current > 363.17:
+                            outfile.write("%s %2d %2d %4d %s\n"%(rd_data.keys()[i], j+1, k+1, rd_data[rd_data.keys()[i]][j][k], singlechip_current))
+
+    # return current_statistics
+    return current_statistics
+#======================================================================#
+## plot current statistics
+def plot_current_statistic(data):
+    # print data
+    mu, sigma = norm.fit(data)
+    print mu, sigma
+    plt.hist(data, bins=50, density=True, color='r', label='Current bin')
+
+    xmin, xmax = plt.xlim()
+    x = np.linspace(xmin, xmax, 1000)
+    p = norm.pdf(x, mu, sigma)
+    # print p
+    # print len(data), len(p)
+    # x_ticks = np.arange(200, 450)
+    plt.plot(x, p, color='b', linewidth=1.2, label='Fit results: ${\mu}$ = %.2f,  ${\sigma}$ = %.2f' % (mu, sigma))
+    plt.title("Current Histogram", family="Times New Roman", fontsize=12)
+    plt.xlabel("Current [mA]", family="Times New Roman", fontsize=10)
+    plt.ylabel("Density", family="Times New Roman", fontsize=10)
+    plt.xlim(200, 480)
+
+    plt.xticks(family="Times New Roman", fontsize=8)
+    plt.yticks(family="Times New Roman", fontsize=8)
+    plt.grid(linestyle='-.', linewidth=lw_grid)
+    plt.legend(fontsize=8, edgecolor='green')
+    plt.xticks(family="Times New Roman", fontsize=8)
+    plt.yticks(family="Times New Roman", fontsize=8)
+    plt.grid(linestyle='-.', linewidth=lw_grid)
+    plt.legend(fontsize=8, edgecolor='green')
+    plt.savefig("Current_histogram.png", dpi=fig_dpi, bbox_inches='tight')
+    plt.clf()
+#======================================================================#
 ## main function
 def main():
     # Unique_Check()                                              # Unique check
@@ -271,6 +356,8 @@ def main():
     # print search_eye_file(3143)                                 # test search_eye_file function
     # print search_ber_file(5768)                                 # test search_ber_file function
     # repeated_ber_check()                                        # repeated check ber
+    data = current_statistics()
+    plot_current_statistic(data)
     print "Ok"                                                  # execute over
 #======================================================================#
 ## if statement
