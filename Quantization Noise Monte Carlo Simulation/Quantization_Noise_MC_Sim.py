@@ -16,12 +16,12 @@ TDC Quantization Noise Monte Carlo simulation via Python Script.
 hist_bins = 40                  # histogram bin counts
 lw_grid = 0.5                   # grid linewidth
 fig_dpi = 800                   # save figure's resolution
-num = 100000                    # sample count
+num = 50000                    # sample count
 #==================================================================================#
 ## sample generator to generate 10000 Guassian data with mu = 0 ps, sigma = 30 ps
 def sample_generate():
     mu = 1000                                           # normal distribution mu = 1000ps
-    sigma = 10                                          # normal distribution sigam = 30ps
+    sigma = 30                                          # normal distribution sigam = 30ps
     rand_data = np.random.normal(mu, sigma, num)        # generate data
     rand_data_min = min(rand_data)
     rand_data_max = max(rand_data)
@@ -86,6 +86,8 @@ def unform_bin_size(rand_data):
 # @param_in[] random_data input
 def non_unform_bin_size(rand_data):
     print rand_data
+    non_unform_sigma = []
+    non_unform_mu = []
     for delta in xrange(-20, 21, 1):
         Trf = 20 - delta
         Tfr = 20 + delta
@@ -100,27 +102,37 @@ def non_unform_bin_size(rand_data):
             post_quantization_data += [(digital_code*20)-10]
         # print post_quantization_data
         mu, sigma = norm.fit(post_quantization_data)
+        non_unform_mu += [mu]
+        non_unform_sigma += [sigma]
         print delta,  mu, sigma
+    print non_unform_mu
+    print non_unform_sigma
+    delta_t = np.arange(-20, 21, 1)
+    print delta_t
 
-        # post_quan_data = np.random.normal(mu, sigma, num)               # generate data
-        # post_quan_data_min = min(post_quan_data)
-        # post_quan_data_max = max(post_quan_data)
-        # x = np.arange(post_quan_data_min-20, post_quan_data_max+20)     # xrange scope
-        # p = norm.pdf(x, mu, sigma)                                      # normal distribution
-        #
-        # plt.hist(post_quan_data, bins=hist_bins, density=True, color='r', label="hit bin")
-        # plt.plot(x, p, color='b', linewidth=1.5, label='Fit results: $\mu$ = %.2f, $\sigma$ = %.2f' % (mu, sigma))
-        #
-        # plt.title("Non-unform Quantization Data", family="Times New Roman", fontsize=12)
-        # plt.xlabel("Time [ps]", family="Times New Roman", fontsize=10)
-        # plt.ylabel("Density", family="Times New Roman", fontsize=10)
-        #
-        # plt.xticks(family="Times New Roman", fontsize=8)
-        # plt.yticks(family="Times New Roman", fontsize=8)
-        # plt.grid(linestyle='-.', linewidth=lw_grid)
-        # plt.legend(fontsize=8, edgecolor='green')
-        # plt.savefig("Non-unform_Quantization.png", dpi=fig_dpi)         # save figure
-        # plt.clf()
+    plt.plot(delta_t, non_unform_mu, color='b', linewidth=1.5, label='non-unform mu')
+    plt.title("Non-unform Mu Vs delta T", family="Times New Roman", fontsize=12)
+    plt.xlabel("Delta T [ps]", family="Times New Roman", fontsize=10)
+    plt.ylabel("Mu [ps]", family="Times New Roman", fontsize=10)
+
+    plt.xticks(family="Times New Roman", fontsize=8)
+    plt.yticks(family="Times New Roman", fontsize=8)
+    plt.grid(linestyle='-.', linewidth=lw_grid)
+    plt.legend(fontsize=8, edgecolor='green')
+    plt.savefig("Non-unform_mu.png", dpi=fig_dpi)         # save figure
+    plt.clf()
+
+    plt.plot(delta_t, non_unform_sigma, color='b', linewidth=1.5, label='non-unform sigma')
+    plt.title("Non-unform Sigma Vs delta T", family="Times New Roman", fontsize=12)
+    plt.xlabel("Delta T [ps]", family="Times New Roman", fontsize=10)
+    plt.ylabel("sigma [ps]", family="Times New Roman", fontsize=10)
+
+    plt.xticks(family="Times New Roman", fontsize=8)
+    plt.yticks(family="Times New Roman", fontsize=8)
+    plt.grid(linestyle='-.', linewidth=lw_grid)
+    plt.legend(fontsize=8, edgecolor='green')
+    plt.savefig("Non-unform_sigma.png", dpi=fig_dpi)         # save figure
+    plt.clf()
 #==================================================================================#
 ## main function
 def main():
