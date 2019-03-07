@@ -67,7 +67,7 @@ def calculate_bin(rand_data, num, average):
         # print mu, sigma
         x = np.arange(rand_data_min-10, rand_data_max+10)
         p = norm.pdf(x, mu, sigma)
-        plt.hist(mean_delta_d, bins=2, density=False, color='r', histtype='bar', align='mid', rwidth=10, label="Calibration Code")
+        plt.hist(mean_delta_d, bins=[155.5, 156.5, 157.5, 158.5, 159.5], density=False, color='r', histtype='bar', align='mid', rwidth=10, label="Calibration Code")
         # plt.plot(x, p, color='b', linewidth=1.5, label='Fit results: $\mu$ = %.2f, $\sigma$ = %.2f' % (mu, sigma))
 
         plt.xlim(154,159)
@@ -111,8 +111,8 @@ def main():
     print y
     print yerr
 
-    plt.errorbar(x, y, yerr, color='g', elinewidth=0.8, linewidth=0.5, fmt='--o', ecolor='b', capthick=1, capsize=4, markersize=1.5, marker='X', label='Measured Calibration Code')
-    plt.plot(x, [156.25, 156.25, 156.25, 156.25, 156.25], color='r', linewidth=0.8, linestyle='--', label='Real Calibration Code = 156.25')
+    plt.errorbar(x, y, yerr, color='g', elinewidth=0.8, linewidth=0.5, fmt='--o', ecolor='b', capthick=1, capsize=4, markersize=1.5, marker='X', label='Calibration Code')
+    plt.plot(x, [156.25, 156.25, 156.25, 156.25, 156.25], color='r', linewidth=0.8, linestyle='--', label='Real Code = 156.25')
     plt.title("Calibrated Code vs Average Times", family="Times New Roman", fontsize=12)
     plt.xlabel("Average Times", family="Times New Roman", fontsize=10)
     plt.ylabel("Calibrated Code", family="Times New Roman", fontsize=10)
@@ -134,7 +134,6 @@ def main():
     plt.xlabel("Average Times", family="Times New Roman", fontsize=10)
     plt.ylabel("Standard Deviation of Calibration Code", family="Times New Roman", fontsize=10)
 
-    # plt.ylim(0, 0.6)
     plt.xscale('log')
     plt.xticks(family="Times New Roman", fontsize=8)
     plt.yticks(family="Times New Roman", fontsize=8)
