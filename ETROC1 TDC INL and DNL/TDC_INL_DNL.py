@@ -11,17 +11,24 @@ This python script is used to estimate ETROC0 TDC INL and DNL
 @date: May 5, 2019
 @address: SMU dallas, TX
 '''
+#======================================================================#
+## plot parameters
+hist_bins = 30                  # histogram bin counts
+lw_grid = 0.5                   # grid linewidth
+fig_dpi = 800                   # save figure's resolution
 #=============================================================================#
 ## measure time interval via TDC
 # @param[in] time_interval: time interval
 # @param[in] Tfr time of 63 delay cells
 # @param[in] Trf time of 63 delay cells
 def Measure_Interval(time_interval, Tfr_Delay_Cell, Trf_Delay_Cell):
-    print time_interval
+    # print time_interval
     sum = 0
+    digital_code = 0
     for i in xrange(1000):
         Delay_Cell_Time = 0
-        if sum < (time_interval * 1000):
+        if sum < time_interval:
+            digital_code += 1
             if (i/63)%2 == 0:
                 if i%2 == 0:
                     Delay_Cell_Time = Tfr_Delay_Cell[i]
@@ -33,7 +40,20 @@ def Measure_Interval(time_interval, Tfr_Delay_Cell, Trf_Delay_Cell):
                 else:
                     Delay_Cell_Time += Trf_Delay_Cell[i]
             sum += Delay_Cell_Time
-            print i, Delay_Cell_Time, sum
+            # print i, Delay_Cell_Time, sum
+    return digital_code
+    
+#=============================================================================#
+## Ideal transfer function
+def Ideal_Transfer_Function():
+    average_bin = 20                                        # average bin size
+    time_interval = []
+    digital_code = []
+    for i in xrange(12500000):                                 # TDC range scope from 0 ps to 12.5 ns
+        time_interval += [i/1000.0]
+        digital_code += [((i/1000.0)/20)]
+        # print i, digital_code
+    return time_interval, digital_code
 
 #=============================================================================#
 ## main function
@@ -78,7 +98,21 @@ def main():
     print Tfr_Delay_Cell
     print Trf_Delay_Cell
 
-    Measure_Interval(1.062, Tfr_Delay_Cell, Trf_Delay_Cell)
+    for i in xrange(12500):
+        digital_code1 = Measure_Interval(i, Tfr_Delay_Cell, Trf_Delay_Cell)
+        print i, digital_code1
+    time_interval, digital_code = Ideal_Transfer_Function()
+
+    plt.plot(time_interval, digital_code, color='r',marker='X', linewidth=0.2, markersize=0.02, label='Ideal Transfer Fucntion')
+    plt.title("TDC INL Estimate", family="Times New Roman", fontsize=12)
+    plt.xlabel("Time interval [ps]", family="Times New Roman", fontsize=10)
+    plt.ylabel("Digital code", family="Times New Roman", fontsize=10)
+
+    plt.xticks(family="Times New Roman", fontsize=8)
+    plt.yticks(family="Times New Roman", fontsize=8)
+    plt.legend(fontsize=8, edgecolor='green')
+    plt.grid(linestyle='-.', linewidth=lw_grid)
+    plt.savefig("TDC_INL.png", dpi=fig_dpi)
     print "Ok!"
 #=============================================================================#
 if __name__ == "__main__":
