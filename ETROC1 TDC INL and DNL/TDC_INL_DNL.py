@@ -112,8 +112,8 @@ def main():
     # digital_code1 = Measure_Interval(1225, Tfr_Delay_Cell, Trf_Delay_Cell)
     time_interval, digital_code = Ideal_Transfer_Function()
 
-    plt.plot(time_interval, digital_code, color='r',marker='X', linewidth=0.2, markersize=0.02, label='Ideal Transfer Fucntion')
-    plt.plot(time_interval1, digital_code1, color='b',marker='X', linewidth=0.2, markersize=0.02, label='Actual Transfer Fucntion')
+    plt.plot(time_interval, digital_code, color='r',marker='X', linewidth=0.2, markersize=0.02, label='Ideal Transfer Function')
+    plt.plot(time_interval1, digital_code1, color='b',marker='X', linewidth=0.2, markersize=0.02, label='Actual Transfer Function')
     plt.title("TDC INL Estimate", family="Times New Roman", fontsize=12)
     plt.xlabel("Time interval [ps]", family="Times New Roman", fontsize=10)
     plt.ylabel("Digital code", family="Times New Roman", fontsize=10)
