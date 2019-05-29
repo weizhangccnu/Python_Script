@@ -15,7 +15,6 @@ This python script is used to estimate ETROC0 TDC INL and DNL
 '''
 #======================================================================#
 ## plot parameters
-hist_bins = 30                  # histogram bin counts
 lw_grid = 0.5                   # grid linewidth
 fig_dpi = 800                   # save figure's resolution
 #=============================================================================#
@@ -23,7 +22,7 @@ fig_dpi = 800                   # save figure's resolution
 # @param[in] time_interval: time interval
 # @param[in] Tfr time of 63 delay cells
 # @param[in] Trf time of 63 delay cells
-def Measure_Interval(time_interval, Tfr_Delay_Cell, Trf_Delay_Cell):
+def time_to_digital(time_interval, Tfr_Delay_Cell, Trf_Delay_Cell):
     sum = 0
     digital_code = 0
     for i in xrange(700):
@@ -43,7 +42,7 @@ def Measure_Interval(time_interval, Tfr_Delay_Cell, Trf_Delay_Cell):
             sum += Delay_Cell_Time
     return digital_code-1
 #=============================================================================#
-def Return_Interval(digital_code, Tfr_Delay_Cell, Trf_Delay_Cell):
+def digital_to_time(digital_code, Tfr_Delay_Cell, Trf_Delay_Cell):
     sum = 0
     Delay_Cell_Time = 0
     for i in xrange(digital_code):
@@ -57,16 +56,6 @@ def Return_Interval(digital_code, Tfr_Delay_Cell, Trf_Delay_Cell):
                 Delay_Cell_Time += Tfr_Delay_Cell[i%63]
             else:
                 Delay_Cell_Time += Trf_Delay_Cell[i%63]
-    if (digital_code/63)%2 == 0:
-        if digital_code%2 == 0:
-            Delay_Cell_Time += Tfr_Delay_Cell[digital_code%63]/2.0
-        else:
-            Delay_Cell_Time += Trf_Delay_Cell[digital_code%63]/2.0
-    else:
-        if digital_code%2 == 0:
-            Delay_Cell_Time += Tfr_Delay_Cell[digital_code%63]/2.0
-        else:
-            Delay_Cell_Time += Trf_Delay_Cell[digital_code%63]/2.0
     return Delay_Cell_Time
 #=============================================================================#
 ## Ideal transfer function
@@ -91,10 +80,10 @@ def Ideal_Transfer_Function(average_bin_size):
 
 def TDC_INL_Calculate(average_bin_size, Tfr_Delay_Cell, Trf_Delay_Cell):
     TDC_INL = []
-    digital_code_stop = Measure_Interval(12500, Tfr_Delay_Cell, Trf_Delay_Cell)
+    digital_code_stop = time_to_digital(12500, Tfr_Delay_Cell, Trf_Delay_Cell)
     digital_code = np.arange(digital_code_stop)
     for i in xrange(1, len(digital_code)):
-        TDC_INL += [(Return_Interval(digital_code[i], Tfr_Delay_Cell, Trf_Delay_Cell) - Tfr_Delay_Cell[0]/2.0)/average_bin_size - i]
+        TDC_INL += [digital_to_time(digital_code[i], Tfr_Delay_Cell, Trf_Delay_Cell)/average_bin_size - i]
 
     plt.plot(digital_code[1:], TDC_INL, color='r',marker='X', linewidth=0.5, markersize=0.8, label='TDC_INL')
     plt.title("TDC INL Estimate", family="Times New Roman", fontsize=12)
@@ -112,13 +101,12 @@ def TDC_INL_Calculate(average_bin_size, Tfr_Delay_Cell, Trf_Delay_Cell):
 ## TDC DNL Calculate
 #@param[in] Tfr_Delay_Cell: small bin size of 63 delay cell
 #@param[in] Trf_Delay_Cell: big bin size of 63 delay cells
-
 def TDC_DNL_Calculate(average_bin_size, Tfr_Delay_Cell, Trf_Delay_Cell):
     TDC_DNL = []
-    digital_code_stop = Measure_Interval(12500, Tfr_Delay_Cell, Trf_Delay_Cell)
+    digital_code_stop = time_to_digital(12500, Tfr_Delay_Cell, Trf_Delay_Cell)
     digital_code = np.arange(digital_code_stop)
     for i in xrange(1, len(digital_code)-1):
-        TDC_DNL += [(Return_Interval(digital_code[i+1], Tfr_Delay_Cell, Trf_Delay_Cell) - Return_Interval(digital_code[i], Tfr_Delay_Cell, Trf_Delay_Cell))/average_bin_size - 1]
+        TDC_DNL += [(digital_to_time(digital_code[i+1], Tfr_Delay_Cell, Trf_Delay_Cell) - digital_to_time(digital_code[i], Tfr_Delay_Cell, Trf_Delay_Cell))/average_bin_size - 1]
 
     plt.plot(digital_code[1:len(digital_code)-1], TDC_DNL, color='r',marker='X', linewidth=0.5, markersize=0.8, label='TDC_DNL')
     plt.title("TDC DNL Estimate", family="Times New Roman", fontsize=12)
@@ -133,16 +121,18 @@ def TDC_DNL_Calculate(average_bin_size, Tfr_Delay_Cell, Trf_Delay_Cell):
     plt.clf()
 #=============================================================================#
 ## calibration bin size
+#@param[in] num: average times
 #@param[in] Tfr_Delay_Cell: small bin size of 63 delay cell
 #@param[in] Trf_Delay_Cell: big bin size of 63 delay cells
-def calibration_bin_size(Tfr_Delay_Cell, Trf_Delay_Cell):
-    num = 100000                                          # calibration times
-    mu = 1000                                           # normal distribution mu = 1000ps
-    sigma = 200                                          # normal distribution sigam = 30ps
-    rand_data = np.random.normal(mu, sigma, num)        # generate data
+def calibration_bin_size(num, Tfr_Delay_Cell, Trf_Delay_Cell):
+    mu = 1000                                               # normal distribution mu = 1000ps
+    sigma = 200                                             # normal distribution sigam = 30ps
+    rand_data = np.random.normal(mu, sigma, num)            # generate data
     calibration_bin_size = []
     for i in xrange(num):
-        calibration_bin_size += [3125.0/(Measure_Interval(rand_data[i]+3125.0, Tfr_Delay_Cell, Trf_Delay_Cell) - Measure_Interval(rand_data[i], Tfr_Delay_Cell, Trf_Delay_Cell))]
+        # print time_to_digital(rand_data[i]+3125.0, Tfr_Delay_Cell, Trf_Delay_Cell) - time_to_digital(rand_data[i], Tfr_Delay_Cell, Trf_Delay_Cell)
+        calibration_bin_size += [3125.0/(time_to_digital(rand_data[i]+3125.0, Tfr_Delay_Cell, Trf_Delay_Cell) - time_to_digital(rand_data[i], Tfr_Delay_Cell, Trf_Delay_Cell))]
+    print len(calibration_bin_size)
     average_bin_size = np.mean(calibration_bin_size)
     return average_bin_size
 #=============================================================================#
@@ -183,19 +173,25 @@ def main():
                         21.04101435, 21.13719418, 21.41739651, 20.89846598, 20.81686431, 21.19866769,
                         21.02173107, 21.13358564, 21.25680686, 21.0719056,  21.13027417, 21.77255757,
                         20.84063514, 21.28559414, 21.52816637]
-    actual_bin_size = (sum(Tfr_Delay_Cell) + sum(Trf_Delay_Cell))/126.0
-    average_bin_size = calibration_bin_size(Tfr_Delay_Cell, Trf_Delay_Cell)
-    print average_bin_size
+    actual_bin_size = (np.mean(Tfr_Delay_Cell) + np.mean(Trf_Delay_Cell))/2.0
     print actual_bin_size
-    # average_bin_size = 20.0
+
+    # average_times = np.arange(1000, 100000, 5000)
+    # for i in xrange(len(average_times)):
+    average_bin_size = calibration_bin_size(20000, Tfr_Delay_Cell, Trf_Delay_Cell)
+    print average_bin_size - actual_bin_size
+
+    # for i in xrange(126):
+    #     print i,  digital_to_time(i+1, Tfr_Delay_Cell, Trf_Delay_Cell) - digital_to_time(i, Tfr_Delay_Cell, Trf_Delay_Cell)
 
     time_interval1 = []
     digital_code1 = []
     time_range = np.arange(0,200,0.1)
     for i in xrange(len(time_range)):
-        digital_code1 += [Measure_Interval(time_range[i], Tfr_Delay_Cell, Trf_Delay_Cell)]
+        digital_code1 += [time_to_digital(time_range[i], Tfr_Delay_Cell, Trf_Delay_Cell)]
     time_interval1 = time_range
     time_interval, digital_code = Ideal_Transfer_Function(average_bin_size)
+
     plt.plot(time_interval1, digital_code1, color='b',marker='X', linewidth=0.2, markersize=0.02, label='Actual Transfer Function')
     plt.plot(time_interval, digital_code, color='r',marker='X', linewidth=0.2, markersize=0.02, label='Ideal Transfer Function')
     plt.title("TDC INL Estimate", family="Times New Roman", fontsize=12)
@@ -209,7 +205,6 @@ def main():
     plt.clf()
 
     TDC_INL_Calculate(average_bin_size, Tfr_Delay_Cell, Trf_Delay_Cell)
-
     TDC_DNL_Calculate(average_bin_size, Tfr_Delay_Cell, Trf_Delay_Cell)
     print "Ok!"
 #=============================================================================#
