@@ -18,7 +18,7 @@ This python script is used to estimate ETROC0 TDC INL and DNL
 lw_grid = 0.5                   # grid linewidth
 fig_dpi = 800                   # save figure's resolution
 #=============================================================================#
-## measure time interval via TDC
+## time to digital converter function
 # @param[in] time_interval: time interval
 # @param[in] Tfr time of 63 delay cells
 # @param[in] Trf time of 63 delay cells
@@ -42,6 +42,10 @@ def time_to_digital(time_interval, Tfr_Delay_Cell, Trf_Delay_Cell):
             sum += Delay_Cell_Time
     return digital_code-1
 #=============================================================================#
+## digital to time interval converter function
+# @param[in] time_interval: time interval
+# @param[in] Tfr time of 63 delay cells
+# @param[in] Trf time of 63 delay cells
 def digital_to_time(digital_code, Tfr_Delay_Cell, Trf_Delay_Cell):
     sum = 0
     Delay_Cell_Time = 0
@@ -75,9 +79,9 @@ def Ideal_Transfer_Function(average_bin_size):
 
 #=============================================================================#
 ## TDC INL Calculate
+#@param[in] average_bin_size: calibrated average bin size
 #@param[in] Tfr_Delay_Cell: small bin size of 63 delay cell
 #@param[in] Trf_Delay_Cell: big bin size of 63 delay cells
-
 def TDC_INL_Calculate(average_bin_size, Tfr_Delay_Cell, Trf_Delay_Cell):
     TDC_INL = []
     digital_code_stop = time_to_digital(12500, Tfr_Delay_Cell, Trf_Delay_Cell)
@@ -99,6 +103,7 @@ def TDC_INL_Calculate(average_bin_size, Tfr_Delay_Cell, Trf_Delay_Cell):
 
 #=============================================================================#
 ## TDC DNL Calculate
+#@param[in] average_bin_size: calibrated average bin size
 #@param[in] Tfr_Delay_Cell: small bin size of 63 delay cell
 #@param[in] Trf_Delay_Cell: big bin size of 63 delay cells
 def TDC_DNL_Calculate(average_bin_size, Tfr_Delay_Cell, Trf_Delay_Cell):
@@ -119,6 +124,7 @@ def TDC_DNL_Calculate(average_bin_size, Tfr_Delay_Cell, Trf_Delay_Cell):
     plt.grid(linestyle='-.', linewidth=lw_grid)
     plt.savefig("TDC_DNL_Estimate.pdf", dpi=fig_dpi)
     plt.clf()
+
 #=============================================================================#
 ## calibration bin size
 #@param[in] num: average times
@@ -135,6 +141,7 @@ def calibration_bin_size(num, Tfr_Delay_Cell, Trf_Delay_Cell):
     print len(calibration_bin_size)
     average_bin_size = np.mean(calibration_bin_size)
     return average_bin_size
+    
 #=============================================================================#
 ## main function
 def main():
