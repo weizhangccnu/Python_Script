@@ -2,6 +2,7 @@ import os
 import sys
 import time
 import math
+import random
 import numpy as np
 from scipy.stats import norm
 import matplotlib.pyplot as plt
@@ -131,17 +132,22 @@ def TDC_DNL_Calculate(average_bin_size, Tfr_Delay_Cell, Trf_Delay_Cell):
 #@param[in] Tfr_Delay_Cell: small bin size of 63 delay cell
 #@param[in] Trf_Delay_Cell: big bin size of 63 delay cells
 def calibration_bin_size(num, Tfr_Delay_Cell, Trf_Delay_Cell):
-    mu = 1000                                               # normal distribution mu = 1000ps
+                           # normal distribution mu = 1000ps
+
     sigma = 200                                             # normal distribution sigam = 30ps
-    rand_data = np.random.normal(mu, sigma, num)            # generate data
+    rand_data = []
+    for i in xrange(num):
+        mu = random.uniform(1, 10) * 1000
+        # print mu
+        rand_data += [np.random.normal(mu, sigma, 1)]            # generate data
     calibration_bin_size = []
     for i in xrange(num):
         # print time_to_digital(rand_data[i]+3125.0, Tfr_Delay_Cell, Trf_Delay_Cell) - time_to_digital(rand_data[i], Tfr_Delay_Cell, Trf_Delay_Cell)
         calibration_bin_size += [3125.0/(time_to_digital(rand_data[i]+3125.0, Tfr_Delay_Cell, Trf_Delay_Cell) - time_to_digital(rand_data[i], Tfr_Delay_Cell, Trf_Delay_Cell))]
-    print len(calibration_bin_size)
+    # print len(calibration_bin_size)
     average_bin_size = np.mean(calibration_bin_size)
     return average_bin_size
-    
+
 #=============================================================================#
 ## main function
 def main():
@@ -182,37 +188,37 @@ def main():
                         20.84063514, 21.28559414, 21.52816637]
     actual_bin_size = (np.mean(Tfr_Delay_Cell) + np.mean(Trf_Delay_Cell))/2.0
     print actual_bin_size
-
-    # average_times = np.arange(1000, 100000, 5000)
-    # for i in xrange(len(average_times)):
-    average_bin_size = calibration_bin_size(20000, Tfr_Delay_Cell, Trf_Delay_Cell)
-    print average_bin_size - actual_bin_size
+    #
+    average_times = [100, 1000, 10000, 100000]
+    for i in xrange(len(average_times)):
+        average_bin_size = calibration_bin_size(average_times[i], Tfr_Delay_Cell, Trf_Delay_Cell)
+        print average_times[i], average_bin_size - actual_bin_size
 
     # for i in xrange(126):
     #     print i,  digital_to_time(i+1, Tfr_Delay_Cell, Trf_Delay_Cell) - digital_to_time(i, Tfr_Delay_Cell, Trf_Delay_Cell)
 
-    time_interval1 = []
-    digital_code1 = []
-    time_range = np.arange(0,200,0.1)
-    for i in xrange(len(time_range)):
-        digital_code1 += [time_to_digital(time_range[i], Tfr_Delay_Cell, Trf_Delay_Cell)]
-    time_interval1 = time_range
-    time_interval, digital_code = Ideal_Transfer_Function(average_bin_size)
-
-    plt.plot(time_interval1, digital_code1, color='b',marker='X', linewidth=0.2, markersize=0.02, label='Actual Transfer Function')
-    plt.plot(time_interval, digital_code, color='r',marker='X', linewidth=0.2, markersize=0.02, label='Ideal Transfer Function')
-    plt.title("TDC INL Estimate", family="Times New Roman", fontsize=12)
-    plt.xlabel("Time interval [ps]", family="Times New Roman", fontsize=10)
-    plt.ylabel("Digital code", family="Times New Roman", fontsize=10)
-    plt.xticks(family="Times New Roman", fontsize=8)
-    plt.yticks(family="Times New Roman", fontsize=8)
-    plt.legend(fontsize=8, edgecolor='green')
-    plt.grid(linestyle='-.', linewidth=lw_grid)
-    plt.savefig("TDC_Transfer.pdf", dpi=fig_dpi)
-    plt.clf()
-
-    TDC_INL_Calculate(average_bin_size, Tfr_Delay_Cell, Trf_Delay_Cell)
-    TDC_DNL_Calculate(average_bin_size, Tfr_Delay_Cell, Trf_Delay_Cell)
+    # time_interval1 = []
+    # digital_code1 = []
+    # time_range = np.arange(0,200,0.1)
+    # for i in xrange(len(time_range)):
+    #     digital_code1 += [time_to_digital(time_range[i], Tfr_Delay_Cell, Trf_Delay_Cell)]
+    # time_interval1 = time_range
+    # time_interval, digital_code = Ideal_Transfer_Function(average_bin_size)
+    #
+    # plt.plot(time_interval1, digital_code1, color='b',marker='X', linewidth=0.2, markersize=0.02, label='Actual Transfer Function')
+    # plt.plot(time_interval, digital_code, color='r',marker='X', linewidth=0.2, markersize=0.02, label='Ideal Transfer Function')
+    # plt.title("TDC INL Estimate", family="Times New Roman", fontsize=12)
+    # plt.xlabel("Time interval [ps]", family="Times New Roman", fontsize=10)
+    # plt.ylabel("Digital code", family="Times New Roman", fontsize=10)
+    # plt.xticks(family="Times New Roman", fontsize=8)
+    # plt.yticks(family="Times New Roman", fontsize=8)
+    # plt.legend(fontsize=8, edgecolor='green')
+    # plt.grid(linestyle='-.', linewidth=lw_grid)
+    # plt.savefig("TDC_Transfer.pdf", dpi=fig_dpi)
+    # plt.clf()
+    #
+    # TDC_INL_Calculate(average_bin_size, Tfr_Delay_Cell, Trf_Delay_Cell)
+    # TDC_DNL_Calculate(average_bin_size, Tfr_Delay_Cell, Trf_Delay_Cell)
     print "Ok!"
 #=============================================================================#
 if __name__ == "__main__":
