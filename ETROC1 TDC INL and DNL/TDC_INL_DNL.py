@@ -8,6 +8,7 @@ from scipy.stats import norm
 import matplotlib.pyplot as plt
 from mpl_toolkits.axes_grid1.inset_locator import zoomed_inset_axes
 from mpl_toolkits.axes_grid1.inset_locator import mark_inset
+from matplotlib import gridspec
 '''
 This python script is used to estimate ETROC0 TDC INL and DNL
 @author: Wei Zhang
@@ -83,7 +84,7 @@ def Ideal_Transfer_Function(average_bin_size):
 #@param[in] average_bin_size: calibrated average bin size
 #@param[in] Tfr_Delay_Cell: small bin size of 63 delay cell
 #@param[in] Trf_Delay_Cell: big bin size of 63 delay cells
-def TDC_INL_Calculate(average_bin_size, Tfr_Delay_Cell, Trf_Delay_Cell):
+def TDC_INL_Calculate(average_bin_size, Tfr_Delay_Cell, Trf_Delay_Cell, filename):
     TDC_INL = []
     digital_code_stop = time_to_digital(12500, Tfr_Delay_Cell, Trf_Delay_Cell)
     digital_code = np.arange(digital_code_stop)
@@ -99,7 +100,7 @@ def TDC_INL_Calculate(average_bin_size, Tfr_Delay_Cell, Trf_Delay_Cell):
     plt.yticks(family="Times New Roman", fontsize=8)
     plt.legend(fontsize=8, edgecolor='green')
     plt.grid(linestyle='-.', linewidth=lw_grid)
-    plt.savefig("TDC_INL_Estimate.pdf", dpi=fig_dpi)
+    plt.savefig("TDC_INL_Estimate_%s.png"%filename, dpi=fig_dpi)
     plt.clf()
 
 #=============================================================================#
@@ -125,27 +126,27 @@ def TDC_DNL_Calculate(average_bin_size, Tfr_Delay_Cell, Trf_Delay_Cell):
     plt.grid(linestyle='-.', linewidth=lw_grid)
     plt.savefig("TDC_DNL_Estimate.pdf", dpi=fig_dpi)
     plt.clf()
-
+#=============================================================================#
+def square_number(n):
+    return n**2
 #=============================================================================#
 ## calibration bin size
 #@param[in] num: average times
 #@param[in] Tfr_Delay_Cell: small bin size of 63 delay cell
 #@param[in] Trf_Delay_Cell: big bin size of 63 delay cells
 def calibration_bin_size(num, Tfr_Delay_Cell, Trf_Delay_Cell):
-                           # normal distribution mu = 1000ps
-
-    sigma = 200                                             # normal distribution sigam = 30ps
+    sigma = 200                                                     # normal distribution sigam = 30ps
     rand_data = []
     for i in xrange(num):
         mu = random.uniform(1, 10) * 1000
         # print mu
-        rand_data += [np.random.normal(mu, sigma, 1)]            # generate data
-    calibration_bin_size = []
+        rand_data += [np.random.normal(mu, sigma, 1)]               # generate data
+    digital_interval = []
     for i in xrange(num):
-        # print time_to_digital(rand_data[i]+3125.0, Tfr_Delay_Cell, Trf_Delay_Cell) - time_to_digital(rand_data[i], Tfr_Delay_Cell, Trf_Delay_Cell)
-        calibration_bin_size += [3125.0/(time_to_digital(rand_data[i]+3125.0, Tfr_Delay_Cell, Trf_Delay_Cell) - time_to_digital(rand_data[i], Tfr_Delay_Cell, Trf_Delay_Cell))]
-    # print len(calibration_bin_size)
-    average_bin_size = np.mean(calibration_bin_size)
+        digital_interval += [time_to_digital(rand_data[i]+3125.0, Tfr_Delay_Cell, Trf_Delay_Cell) - time_to_digital(rand_data[i], Tfr_Delay_Cell, Trf_Delay_Cell)]
+    # print digital_interval
+    square_digital_interval = map(square_number, digital_interval)
+    average_bin_size = (np.mean(digital_interval) * 3125.0) / np.mean(square_digital_interval)
     return average_bin_size
 
 #=============================================================================#
@@ -188,14 +189,102 @@ def main():
                         20.84063514, 21.28559414, 21.52816637]
     actual_bin_size = (np.mean(Tfr_Delay_Cell) + np.mean(Trf_Delay_Cell))/2.0
     print actual_bin_size
-    #
-    average_times = [100, 1000, 10000, 100000]
-    for i in xrange(len(average_times)):
-        average_bin_size = calibration_bin_size(average_times[i], Tfr_Delay_Cell, Trf_Delay_Cell)
-        print average_times[i], average_bin_size - actual_bin_size
 
-    # for i in xrange(126):
-    #     print i,  digital_to_time(i+1, Tfr_Delay_Cell, Trf_Delay_Cell) - digital_to_time(i, Tfr_Delay_Cell, Trf_Delay_Cell)
+    # digital_interval = calibration_bin_size(200, Tfr_Delay_Cell, Trf_Delay_Cell)
+    # print digital_interval
+    # plt.hist(digital_interval, bins=[156.5, 157.5, 158.5, 159.5, 160.5], density=False, color='r', label="Calibration digital code")
+    # # plt.title("Calibration Code Histogram", family="Times New Roman", fontsize=12)
+    # plt.xlabel("Digital Code [bin]", family="Times New Roman", fontsize=10)
+    # plt.ylabel("Counts", family="Times New Roman", fontsize=10)
+    # plt.xticks(family="Times New Roman", fontsize=8)
+    # plt.yticks(family="Times New Roman", fontsize=8)
+    # plt.grid(linestyle='-.', linewidth=lw_grid)
+    # plt.legend(fontsize=6, edgecolor='green')
+    # plt.savefig("Calibration_digital_code_histogram.png", dpi=fig_dpi, bbox_inches='tight')         # save figure
+    # plt.clf()
+    # average_times = [1, 10, 100, 1000, 10000, 100000]
+    # for i in xrange(len(average_times)):
+    #     average_bin_size = calibration_bin_size(average_times[i], Tfr_Delay_Cell, Trf_Delay_Cell)
+    #     print average_times[i], average_bin_size - actual_bin_size
+    #     TDC_INL_Calculate(average_bin_size, Tfr_Delay_Cell, Trf_Delay_Cell, average_times[i])
+    average_times = [1, 10, 100, 1000]
+    average_bin = [[] for k in xrange(len(average_times))]
+    # print average_bin
+    for j in xrange(100):
+        for i in xrange(len(average_times)):
+            average_bin_size = calibration_bin_size(average_times[i], Tfr_Delay_Cell, Trf_Delay_Cell)
+            average_bin[i] += [average_bin_size]
+            # print average_times[i], average_bin_size - actual_bin_size
+    # print len(average_bin[0]), len(average_bin[1])
+
+    hist_bins = np.arange(19.6, 19.82, 0.005)
+    print hist_bins
+
+    mu, sigma = norm.fit(average_bin[0])
+    print mu, sigma
+    # plt.subplot(gs[0])
+    plt.hist(average_bin[0], bins=hist_bins, density=True, color='r', label="Bin size histogram, $\mu=%.4f$, $\sigma=%.4f$, Calibration times = 1"%(mu,sigma))
+    plt.vlines(actual_bin_size, 0, 140, colors='g', linewidth= 0.8, linestyles='-.', label='actual bin size = %.4f'%actual_bin_size)
+    plt.xlabel("Calibration Bin Size", family="Times New Roman", fontsize=10)
+    plt.ylabel("Counts", family="Times New Roman", fontsize=10)
+    plt.ylim(0, 180)
+    plt.xticks(family="Times New Roman", fontsize=8)
+    plt.yticks(family="Times New Roman", fontsize=8)
+    plt.grid(linestyle='-.', linewidth=lw_grid)
+    plt.legend(fontsize=6, edgecolor='green')
+    plt.savefig("Calibration_Bin_Size_histogram_1.png", dpi=fig_dpi, bbox_inches='tight')         # save figure
+    plt.clf()
+
+    mu, sigma = norm.fit(average_bin[1])
+    print mu, sigma
+    # plt.subplot(gs[1])
+    plt.hist(average_bin[1], bins=hist_bins, density=True, color='r', label="Bin size histogram, $\mu=%.4f$, $\sigma=%.4f$, Calibration times = 10"%(mu,sigma))
+    plt.vlines(actual_bin_size, 0, 60, colors='g', linewidth= 0.8, linestyles='-.', label='actual bin size = %.4f'%actual_bin_size)
+    # plt.title("Calibration Code Histogram", family="Times New Roman", fontsize=12)
+    plt.xlabel("Calibration Bin Size", family="Times New Roman", fontsize=10)
+    plt.ylabel("Counts", family="Times New Roman", fontsize=10)
+    plt.ylim(0, 80)
+    plt.xticks(family="Times New Roman", fontsize=8)
+    plt.yticks(family="Times New Roman", fontsize=8)
+    plt.grid(linestyle='-.', linewidth=lw_grid)
+    plt.legend(fontsize=6, edgecolor='green')
+    plt.savefig("Calibration_Bin_Size_histogram_10.png", dpi=fig_dpi, bbox_inches='tight')         # save figure
+    plt.clf()
+
+    mu, sigma = norm.fit(average_bin[2])
+    print mu, sigma
+    # plt.subplot(gs[2])
+    plt.hist(average_bin[2], bins=hist_bins, density=True, color='r', label="Bin size histogram, $\mu=%.4f$, $\sigma=%.4f$, Calibration times = 100"%(mu,sigma))
+    plt.vlines(actual_bin_size, 0, 80, colors='g', linewidth= 0.8, linestyles='-.', label='actual bin size = %.4f'%actual_bin_size)
+    # plt.title("Calibration Code Histogram", family="Times New Roman", fontsize=12)
+    plt.xlabel("Calibration Bin Size", family="Times New Roman", fontsize=10)
+    plt.ylabel("Counts", family="Times New Roman", fontsize=10)
+    plt.ylim(0, 100)
+    plt.xticks(family="Times New Roman", fontsize=8)
+    plt.yticks(family="Times New Roman", fontsize=8)
+    plt.grid(linestyle='-.', linewidth=lw_grid)
+    plt.legend(fontsize=6, edgecolor='green')
+    plt.savefig("Calibration_Bin_Size_histogram_100.png", dpi=fig_dpi, bbox_inches='tight')         # save figure
+    plt.clf()
+
+    mu, sigma = norm.fit(average_bin[3])
+    print mu, sigma
+    # plt.subplot(gs[3])
+    plt.hist(average_bin[3], bins=hist_bins, density=True, color='r', label="Bin size histogram, $\mu=%.4f$, $\sigma=%.4f$, Calibration times = 1000"%(mu,sigma))
+    plt.vlines(actual_bin_size, 0, 130, colors='g', linewidth= 0.8, linestyles='-.', label='actual bin size = %.4f'%actual_bin_size)
+    # plt.title("Calibration Code Histogram", family="Times New Roman", fontsize=12)
+    plt.xlabel("Calibration Bin Size", family="Times New Roman", fontsize=10)
+    plt.ylabel("Counts", family="Times New Roman", fontsize=10)
+    plt.ylim(0, 180)
+    plt.xticks(family="Times New Roman", fontsize=8)
+    plt.yticks(family="Times New Roman", fontsize=8)
+    plt.grid(linestyle='-.', linewidth=lw_grid)
+    plt.legend(fontsize=6, edgecolor='green')
+    plt.savefig("Calibration_Bin_Size_histogram_1000.png", dpi=fig_dpi, bbox_inches='tight')         # save figure
+    plt.clf()
+    # plt.subplots_adjust(left=0.08, bottom=0.1, right=0.98, top=0.96, wspace=0.2, hspace=0.22)
+    # plt.suptitle("Bin Size Histogram", family="Times New Roman", fontsize=10)
+
 
     # time_interval1 = []
     # digital_code1 = []
@@ -219,7 +308,7 @@ def main():
     #
     # TDC_INL_Calculate(average_bin_size, Tfr_Delay_Cell, Trf_Delay_Cell)
     # TDC_DNL_Calculate(average_bin_size, Tfr_Delay_Cell, Trf_Delay_Cell)
-    print "Ok!"
+    # print "Ok!"
 #=============================================================================#
 if __name__ == "__main__":
     main()
