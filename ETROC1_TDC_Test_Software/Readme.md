@@ -2,7 +2,7 @@
   - **command\_interpret.py** is a class for sockect communication
   - **kc705\_mig\_control.py** includes all kinds of function such as I2C write/read, DDR3 data storage, Ethernet communication.
 ## 2. Hardware platform
-  - The FPGA is Xilinx kc705 EVB and the FPGA socket address is 192.168.2.x, The x is configurable via switch (SW11, Pin1 and Pin2) and its value ranges from 0 to 3.
+  - The FPGA is Xilinx KC705 EVB and the FPGA socket address is 192.168.2.x, The x is configurable via switch (SW11, Pin1 and Pin2) and its value ranges from 0 to 3. [Schematic of KC705 EVB](https://www.xilinx.com/support/documentation/boards_and_kits/kc705_Schematic_xtp132_rev1_1.pdf)
   - The python script is running on the Windows operating system.
   - Between the PC and KC705 EVB is connected by Ethernet cable. 
 ## 3. Software version
