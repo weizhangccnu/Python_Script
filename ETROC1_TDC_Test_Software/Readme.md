@@ -14,7 +14,7 @@
   - Between the PC and KC705 EVB is connected by Ethernet cable. 
   - I2C interface mapping is shown as below figure.
   ![I2C interface Mapping](https://github.com/weizhangccnu/Python_Script/blob/master/ETROC1_TDC_Test_Software/Img/I2C_Interface_Mapping.png)
-  - Ethernet communication speed is 1Gbps, Please make sure the Ethernet cable can meet the requirements.
+  - Ethernet communication speed is 1Gbps, Please make sure that the Ethernet cable can meet the requirements.
 
 ## 3. Software version
   - Firmware was synthesized and implemented on Vivado 2016.2
