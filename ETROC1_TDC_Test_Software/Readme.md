@@ -12,7 +12,7 @@
   - I2C interface mapping is shown as below figure.
   ![I2C interface Mapping](https://github.com/weizhangccnu/Python_Script/blob/master/ETROC1_TDC_Test_Software/Img/I2C_Interface_Mapping.png)
 ## 3. Software version
-  - Firmware compliled on Vivado 2016.2 version
+  - Firmware was synthesized and implemented on Vivado 2016.2
   - Python version: **python3.7.5** and The python scripts are all executed on **Atom IDE** with terminal package. You can choose other IDE for python according to your habits.
   - Before you execute the above python scripts, you should make sure that all the module that import at the begin each python file has already been installed. You can use **"pip install modulename"** to install used module.
 
