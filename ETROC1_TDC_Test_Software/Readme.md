@@ -1,12 +1,14 @@
 ## 1. This python script is used for testing the ETROC1 TDC chip
   - The **command\_interpret.py** file is a class for sockect communication
-  - The **kc705\_mig\_control.py** file includes all kinds of function such as I2C write/read, DDR3 data storage, Ethernet communication.
+  - The **kc705\_mig\_control.py** file includes all kinds of functions such as I2C write/read, DDR3 data storage, Ethernet communication.
 ## 2. Hardware platform
   - The FPGA is Xilinx KC705 EVB and the FPGA socket address is 192.168.2.x, The x is configurable via switch (SW11, Pin1 and Pin2) and its value ranges from 0 to 3 and the port number is fixed to 1024. [Schematic of KC705 EVB](https://www.xilinx.com/support/documentation/boards_and_kits/kc705_Schematic_xtp132_rev1_1.pdf)
   ```verilog
 	hostname = '192.168.2.3'			#FPGA IP address
 	port = 1024					#port number
   ```
+  - KC750 EVB Picture is shown as below:
+  ![KC705 EVB Picture](https://github.com/weizhangccnu/Python_Script/blob/master/ETROC1_TDC_Test_Software/Img/KC705_EVB.png)
   - The python script is running on the Windows operating system.
   - Between the PC and KC705 EVB is connected by Ethernet cable. 
   - I2C interface mapping is shown as below figure.
