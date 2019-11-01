@@ -33,8 +33,5 @@
   ![FPGA Configuration mode](https://github.com/weizhangccnu/Python_Script/blob/master/ETROC1_TDC_Test_Software/Img/FPGA_Configuration_mode.png)
 
   **2.** Verify Ethernet communiction.
-  - Open windows doc terminal and using `ping` command to verify the Ethernet connection is working or not.
-  ``` python
-	ping 192.168.2.3
-  ```
+  - Open windows doc terminal and using `ping 192.168.2.3` command to verify the Ethernet connection is working or not. If the Ethernet connection is wroking, all sent package will be received, otherwise not.
 
