@@ -34,5 +34,5 @@
 
   **2.** Verify Ethernet communiction.
   - Open windows doc terminal and using `ping 192.168.2.3` command to verify the Ethernet connection is working or not. If the Ethernet connection is wroking, all sent package will be received, otherwise not.
-  - If the Ethernet connection is well, The RX and TX identification LED will blink when execute the command of `ping 192.168.2.3`.
+  - If the Ethernet connection is well, The RX and TX identification LED near the Ethernet socket will blink when execute the command of `ping 192.168.2.3`.
 
