@@ -3,7 +3,7 @@
   - The **kc705\_mig\_control.py** file includes all kinds of functions such as I2C write/read, DDR3 data storage, Ethernet communication.
 
 ## 2. Hardware platform
-  - The FPGA is Xilinx KC705 EVB and the FPGA socket address is 192.168.2.x, The x is configurable via switch (SW11, Pin1 and Pin2) and its value ranges from 0 to 3 and the port number is fixed to 1024. [Schematic of KC705 EVB](https://www.xilinx.com/support/documentation/boards_and_kits/kc705_Schematic_xtp132_rev1_1.pdf)
+  - The FPGA is Xilinx KC705 EVB and the FPGA socket address is 192.168.2.x, The x is configurable via switch (DIP switch SW11 positions 1 and 2 control the value of `x`, the positions 1 and 2 are **ON**, `x=3`, the position 1 is **ON** and the position 2 is **OFF**, `x=1`, and so forth) and its value ranges from 0 to 3 and the port number is fixed to 1024. [Schematic of KC705 EVB](https://www.xilinx.com/support/documentation/boards_and_kits/kc705_Schematic_xtp132_rev1_1.pdf)
   ```verilog
 	hostname = '192.168.2.3'			#FPGA IP address
 	port = 1024					#port number
@@ -29,6 +29,7 @@
 ## 5. Test Procedures
   **1.** Download `kc705_mig.bit` file into FPGA.
   - kc705_mig.bit file link
+  - 
 
   **2.** Verify Ethernet communiction is correct.
 
