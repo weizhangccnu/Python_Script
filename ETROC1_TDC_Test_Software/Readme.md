@@ -39,8 +39,9 @@
 
 **3.** Provide reference clock to GTX. 
   - Using a USB cable connects the PC with Si5338-EVB and Using Clockbuilder Pro configures Si5338-EVB to generat a 160 MHz differential output clock at CLK0A/CLK0B SMA connector.  
-  - Between the Si5338-EVB and KC-705 EVB is connected by a piar of coxial cable. The J15 and J16 are the GTX reference clock input SMAs. Before connecting the reference clock, you should make sure that the clock frequency is 160 MHz.
+  - Between the Si5338-EVB and KC-705 EVB is connected by a piar of coxial cable. The **J15** and **J16** are the GTX reference clock input SMAs. Before connecting the reference clock, you should make sure that the clock frequency is 160 MHz.
   
 **4.** Verify I2C write and read function.
+  - Firstly, we should connect TROC1 TDC test board I2C interface to the FPGA according to the FPGA I2C interface mapping.
 
 **5.** Verify DDR3 data storage and fecth function.
