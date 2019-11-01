@@ -33,7 +33,7 @@
   ![FPGA Configuration mode](https://github.com/weizhangccnu/Python_Script/blob/master/ETROC1_TDC_Test_Software/Img/FPGA_Configuration_mode.png)
   **2.** Verify Ethernet communiction is correct.
   - Open windows doc terminal and using `ping` command to verify the Ethernet communication is correct or not.
-``` python
-    ping 192.168.2.3
-```
+  ``` python
+	ping 192.168.2.3
+  ```
 
