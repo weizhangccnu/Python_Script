@@ -27,5 +27,5 @@
   - [Si5338-EVB User's Guide](https://www.silabs.com/documents/public/user-guides/Si5338-EVB.pdf)
 
 ## 5. Test Procedures
-  * Download `kc705_mig.bit` file into FPGA.
+..1. Download `kc705_mig.bit` file into FPGA.
   * Verify Ethernet communiction is correct.
