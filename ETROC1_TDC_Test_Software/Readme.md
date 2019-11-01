@@ -29,7 +29,7 @@
 ## 5. Test Procedures
   **1.** Download `kc705_mig.bit` file into FPGA.
   - [kc705_mig.bit file link](https://www.baidu.com)
-  - Download mode configuration
+  - FPGA configuration mode: DIP switch SW13 positions 3, 4, and 5 control which configuration mode is used at power-up or when the PROG pushbutton is pressed. the SW13 should be set as shown the below figure.
 
   **2.** Verify Ethernet communiction is correct.
 
