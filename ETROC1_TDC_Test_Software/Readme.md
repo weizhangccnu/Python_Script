@@ -28,5 +28,5 @@
 
 ## 5. Test Procedures
   **1.** Download `kc705_mig.bit` file into FPGA.
-    - kc705_mig.bit file link
+  - kc705_mig.bit file link
   **2.** Verify Ethernet communiction is correct.
