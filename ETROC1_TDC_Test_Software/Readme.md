@@ -31,6 +31,7 @@
   - [kc705_mig.bit file link](https://www.baidu.com)
   - FPGA configuration mode: DIP switch SW13 positions 3, 4, and 5 control which configuration mode is used at power-up or when the PROG pushbutton is pressed. the SW13 should be set as shown the below figure.
   ![FPGA Configuration mode](https://github.com/weizhangccnu/Python_Script/blob/master/ETROC1_TDC_Test_Software/Img/FPGA_Configuration_mode.png)
+
 **2.** Verify Ethernet communiction is correct.
   - Open windows doc terminal and using `ping` command to verify the Ethernet communication is correct or not.
   ``` python
