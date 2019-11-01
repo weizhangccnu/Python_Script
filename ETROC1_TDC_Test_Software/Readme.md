@@ -31,7 +31,7 @@
   - [kc705_mig.bit file link](https://www.baidu.com)
   - FPGA configuration mode: DIP switch SW13 positions 3, 4, and 5 control which configuration mode is used at power-up or when the PROG pushbutton is pressed. the SW13 should be set as shown the below figure.
   ![FPGA Configuration mode](https://github.com/weizhangccnu/Python_Script/blob/master/ETROC1_TDC_Test_Software/Img/FPGA_Configuration_mode.png)
-  - Open hardware manager on Vivad IDE and download `kc705_mig.bit` file into FPGA.
+  - Launch **open hardware manager** on Vivad IDE and download `kc705_mig.bit` file into FPGA.
 
 **2.** Verify Ethernet communiction.
   - Open windows doc terminal and using `ping 192.168.2.3` command to verify the Ethernet connection is working or not. If the Ethernet connection is wroking, all sent package will be received, otherwise not.
