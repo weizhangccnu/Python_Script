@@ -11,7 +11,7 @@
   - KC750 EVB Picture is shown as below:
   ![KC705 EVB Picture](https://github.com/weizhangccnu/Python_Script/blob/master/ETROC1_TDC_Test_Software/Img/KC705_EVB.png)
   - The python scripts can be executed both on Windows and Linux operating system.
-  - Between the PC and KC705 EVB is connected by Ethernet cable. 
+  - The Ethernet cable is connected between the PC and KC705 EVB.  
   - I2C interface mapping is shown as below figure.
   ![I2C interface Mapping](https://github.com/weizhangccnu/Python_Script/blob/master/ETROC1_TDC_Test_Software/Img/I2C_Interface_Mapping.png)
   - Ethernet communication speed is 1Gbps, Please make sure that the Ethernet cable can meet the requirements.
