@@ -28,7 +28,7 @@
 
 ## 5. Test Procedures
 **1.** Download `kc705_mig.bit` file into FPGA.
-  - [kc705_mig.bit file link](https://www.baidu.com)
+  - [kc705_mig.bit file link](https://github.com/weizhangccnu/FPGA_Project/tree/master/kc705_ETROC1_TDC_Test_20191030/kc705_mig.runs/impl_1)
   - FPGA configuration mode: DIP switch SW13 positions 3, 4, and 5 control which configuration mode is used at power-up or when the PROG pushbutton is pressed. the SW13 should be set as shown the below figure.
   ![FPGA Configuration mode](https://github.com/weizhangccnu/Python_Script/blob/master/ETROC1_TDC_Test_Software/Img/FPGA_Configuration_mode.png)
   - Launch **open hardware manager** menu on Vivad IDE and download `kc705_mig.bit` file into FPGA.
@@ -44,4 +44,6 @@
 **4.** Verify I2C write and read function.
   - Firstly, we should connect TROC1 TDC test board I2C interface to the FPGA according to the FPGA I2C interface mapping.
   - Using `iic_read(mode, slave_addr, wr, reg_addr)` function read the register default value of ETROC1 TDC I2C controller and compare the read out default value with the set default value.
+  - Using `iic_write(mode, slave_addr, wr, reg_addr, data)` function write some register value and Using `iic_read(mode, slave_addr, wr, reg_addr)` function read back this register value at once. Compare the write in register data with read out data from register. If the write in data is identical with the read back data, it demonstrate that the I2C write and read function are correct. 
+
 **5.** Verify DDR3 data storage and fecth function.
