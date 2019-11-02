@@ -18,7 +18,7 @@
 
 ## 3. Software version
   - Firmware was synthesized and implemented on Vivado 2016.2
-  - Python version: **python3.7.5** and The python scripts are all executed on **Atom IDE** with terminal package. You can choose other IDE for python according to your habits.
+  - Python version: **python3.7.5** and the python scripts are all executed on **Atom IDE** with terminal package. You can choose other IDE for python according to your habits.
   - Before you execute the above python scripts, you should make sure that all the modules imported at the begin of each python file have already been installed. Otherwise, you must install all used modules with the command of `pip install modulename`
 
 ## 4. FPGA GTX reference clock configuration
