@@ -29,7 +29,7 @@
 ## 5. Test Procedures
 **1.** Download `kc705_mig.bit` file into FPGA.
   - [kc705_mig.bit file link](https://github.com/weizhangccnu/FPGA_Project/tree/master/kc705_ETROC1_TDC_Test_20191030/kc705_mig.runs/impl_1)
-  - FPGA configuration mode: DIP switch SW13 positions 3, 4, and 5 control which configuration mode is used at power-up or when the PROG pushbutton is pressed. the SW13 should be set as shown the below figure.
+  - FPGA configuration mode: DIP switch SW13 positions 3, 4, and 5 control whose configuration mode is used at power-up or when the PROG pushbutton is pressed. The SW13 should be set as shown the below figure.
   ![FPGA Configuration mode](https://github.com/weizhangccnu/Python_Script/blob/master/ETROC1_TDC_Test_Software/Img/FPGA_Configuration_mode.png)
   - Launch **open hardware manager** menu on Vivad IDE and download `kc705_mig.bit` file into FPGA.
 
