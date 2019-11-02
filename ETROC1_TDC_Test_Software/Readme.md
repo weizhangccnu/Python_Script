@@ -43,5 +43,5 @@
   
 **4.** Verify I2C write and read function.
   - Firstly, we should connect TROC1 TDC test board I2C interface to the FPGA according to the FPGA I2C interface mapping.
-
+  - Using `iic_read(mode, slave_addr, wr, reg_addr)` function read the register default value of ETROC1 TDC I2C controller and compare the read out default value with the set default value.
 **5.** Verify DDR3 data storage and fecth function.
