@@ -8,4 +8,4 @@ pip install Pyqt5-tools
 ![Qt Desiger GUI](https://github.com/weizhangccnu/Python_Script/blob/master/PyQt_Testing/Img/QT_Designer_GUI.PNG)
   - According to your requirement, you can develope your GUI freely and save file with name `xxx.ui`.
 
-### 3. Convert the `xxx.ui` file into `xxx.py` file with the command `pyuic5 -x xxx.ui -o xxx.py`
+### 3. Convert `xxx.ui` file into `xxx.py` file with the command `pyuic5 -x xxx.ui -o xxx.py`
