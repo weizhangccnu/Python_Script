@@ -42,7 +42,7 @@
   - Between the Si5338-EVB and KC-705 EVB is connected by a piar of coxial cable. The **J15** and **J16** are the GTX reference clock input SMAs. Before connecting the reference clock, you should make sure that the clock frequency is 160 MHz.
   
 **4.** Verify I2C write and read functions.
-  - Firstly, we should connect ETROC1 TDC test board I2C interface to the FPGA according to the FPGA I2C interface mapping.
+  - Firstly, we should connect ETROC1 TDC test board I2C interface to the FPGA according to the FPGA I2C interface mapping figure.
   - Using `iic_read(mode, slave_addr, wr, reg_addr)` function read the register default value of ETROC1 TDC I2C controller and compare the read out default value with the set default value.
   - Using `iic_write(mode, slave_addr, wr, reg_addr, data)` function write some register value and Using `iic_read(mode, slave_addr, wr, reg_addr)` function read back this register value at once. Compare write in register data with read out data from register. If the read out data is identical with the write in data, it demonstrate that the I2C write and read functions are correct. 
 
