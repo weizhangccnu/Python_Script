@@ -9,3 +9,4 @@ pip install Pyqt5-tools
   - According to your requirement, you can develope your GUI freely and save file with name `xxx.ui`.
 
 ### 3. Convert `xxx.ui` file into `xxx.py` file with the command `pyuic5 -x xxx.ui -o xxx.py`
+  - The script `pyuic5` locates in the directroy of `./Python/Python37/Scripts`
