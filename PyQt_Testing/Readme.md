@@ -4,7 +4,7 @@
 ```python
 pip install Pyqt5-tools
 ```
-### 2. Lanuch __Qt Designer__ application and develope your GUI. The **Qt Designer** application picture is shown as below figure.
+### 2. Lanuch *Qt Designer* application and develope your GUI. The **Qt Designer** application picture is shown as below figure.
 ![Qt Desiger GUI](https://github.com/weizhangccnu/Python_Script/blob/master/PyQt_Testing/Img/QT_Designer_GUI.PNG)
   - According to your requirement, you can develope your GUI freely and save file with name `xxx.ui`.
 
